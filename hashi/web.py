@@ -16,8 +16,7 @@ class Hashioki(Resource):
         self.client = client
         
     def render_GET(self, request):
-        return """<html><p>If it existed, this would display the irc client for '{0}'.
-</p></html>""".format(self.nick)
+        return """<html><p>If it existed, this would display the irc client for '{0}'.</p></html>""".format(self.nick)
 
 class HashiUserRealm(object):
     implements(IRealm)
