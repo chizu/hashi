@@ -12,11 +12,18 @@ class Client(irc.IRCClient):
     nickname = property(_get_nickname)
     
     def signedOn(self):
+        self.channels = list()
+        self.factory.hashi.register_client(self)
         self.join(self.factory.channel)
         print("Signed on as {0}.".format(self.nickname))
         
     def joined(self, channel):
+        self.channels.append(channel)
         print("Joined {0}.".format(channel))
+
+    def left(self, channel):
+        self.channels.remove(channel)
+        print("Left {0}.".format(channel))
 
     def privmsg(self, user, channel, msg):
         print(msg)
@@ -25,7 +32,8 @@ class Client(irc.IRCClient):
 class ClientFactory(protocol.ClientFactory):
     protocol = Client
 
-    def __init__(self, channel, nickname='hashi'):
+    def __init__(self, hashi, channel, nickname='hashi'):
+        self.hashi = hashi
         self.channel = channel
         self.nickname = nickname
 
@@ -48,11 +56,13 @@ class Hashi(object):
             for server, config in servers.items():
                 chan = str(config["channels"][0])
                 port = config["port"]
-                client = ClientFactory(chan, str(user))
-                # This will break with more than one server, but works for now
-                self.clients[str(user)] = client
-                reactor.connectTCP(server, port, client)
+                client_f = ClientFactory(self, chan, str(user))
+                reactor.connectTCP(server, port, client_f)
         self.site = web_start(self.clients)
+
+    def register_client(self, client):
+        # This will break with more than one server per nick, but works for now
+        self.clients[client.nickname] = client
 
 if __name__ == "__main__":
     hashi = Hashi("config.json")
