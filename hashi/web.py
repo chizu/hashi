@@ -1,4 +1,4 @@
-import json
+from urlparse import parse_qs
 
 from twisted.cred.portal import IRealm, Portal
 from twisted.cred.checkers import FilePasswordDB
@@ -28,6 +28,14 @@ class Channel(Resource):
     def render_GET(self, request):
         return json.dumps(request.irc_client.channels)
 
+    def render_POST(self, request):
+        chan_cmd = parse_qs(request.content.getvalue())
+        print(chan_cmd)
+        for cmd, arg in chan_cmd.items():
+            if cmd == "join":
+                request.irc_client.join(arg[0])
+        return ''
+            
 
 def irc_rewriter(avatarId, client):
     def func(request):
