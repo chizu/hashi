@@ -10,13 +10,13 @@ from zope.interface import implements
 class Hashioki(Resource):
     isLeaf = True
 
-    def __init__(self, clients=None):
+    def __init__(self, nick):
         Resource.__init__(self)
-        self.clients = clients
+        self.nick = nick
         
     def render_GET(self, request):
-        return """<html><p>If it existed, this would display the irc client.
-</p></html>"""
+        return """<html><p>If it existed, this would display the irc client for '{0}'.
+</p></html>""".format(self.nick)
 
 class HashiUserRealm(object):
     implements(IRealm)
@@ -24,7 +24,7 @@ class HashiUserRealm(object):
     def requestAvatar(self, avatarId, mind, *interfaces):
         if IResource in interfaces:
             return (IResource,
-                    Hashioki(),
+                    Hashioki(avatarId),
                     lambda: None)
         raise NotImplementedError()
 
