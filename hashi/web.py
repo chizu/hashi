@@ -1,3 +1,4 @@
+import json
 from urlparse import parse_qs
 
 from twisted.cred.portal import IRealm, Portal
@@ -30,12 +31,21 @@ class Channel(Resource):
 
     def render_POST(self, request):
         chan_cmd = parse_qs(request.content.getvalue())
-        print(chan_cmd)
         for cmd, arg in chan_cmd.items():
             if cmd == "join":
                 request.irc_client.join(arg[0])
+            if cmd == "leave":
+                request.irc_client.leave(arg[0])
         return ''
-            
+
+
+class Privmsg(Resource):
+    isLeaf = True
+    def render_POST(self, request):
+        privmsg_cmd = parse_qs(request.content.getvalue())
+        target = privmsg_cmd["target"][0]
+        msg = privmsg_cmd["msg"][0]
+        request.irc_client.msg(target, msg, 240)
 
 def irc_rewriter(avatarId, client):
     def func(request):
@@ -64,6 +74,7 @@ class HashiUserRealm(object):
 def start(irc_clients):
     rest_api = Hashioki()
     rest_api.putChild('channel', Channel())
+    rest_api.putChild('privmsg', Privmsg())
 
     portal = Portal(HashiUserRealm(irc_clients, rest_api), 
                     [FilePasswordDB('httpd.password')])
