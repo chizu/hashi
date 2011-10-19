@@ -1,4 +1,5 @@
 import sys
+import json
 
 from twisted.words.protocols import irc
 from twisted.internet import protocol, reactor
@@ -35,7 +36,11 @@ class ClientFactory(protocol.ClientFactory):
 
 
 if __name__ == "__main__":
-    chan = sys.argv[1]
-    server = sys.argv[2]
-    reactor.connectTCP(server, 6667, ClientFactory('#' + chan))
+    config_file = open(sys.argv[1])
+    config = json.load(config_file)
+    for user, servers in config.items():
+        for server, config in servers.items():
+            chan = str(config["channels"][0])
+            port = config["port"]
+            reactor.connectTCP(server, port, ClientFactory(chan, str(user)))
     reactor.run()
