@@ -4,6 +4,8 @@ import json
 from twisted.words.protocols import irc
 from twisted.internet import protocol, reactor
 
+from web import start
+
 class Client(irc.IRCClient):
     def _get_nickname(self):
         return self.factory.nickname
@@ -43,4 +45,7 @@ if __name__ == "__main__":
             chan = str(config["channels"][0])
             port = config["port"]
             reactor.connectTCP(server, port, ClientFactory(chan, str(user)))
+
+    site = start()
+
     reactor.run()
