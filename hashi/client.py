@@ -4,7 +4,7 @@ import json
 from twisted.words.protocols import irc
 from twisted.internet import protocol, reactor
 
-from web import start
+from web import start as web_start
 
 class Client(irc.IRCClient):
     def _get_nickname(self):
@@ -37,15 +37,25 @@ class ClientFactory(protocol.ClientFactory):
         print("Could not connect: {0}" % (reason))
 
 
-if __name__ == "__main__":
-    config_file = open(sys.argv[1])
-    config = json.load(config_file)
-    for user, servers in config.items():
-        for server, config in servers.items():
-            chan = str(config["channels"][0])
-            port = config["port"]
-            reactor.connectTCP(server, port, ClientFactory(chan, str(user)))
+class Hashi(object):
+    def __init__(self, config_path):
+        self.config = json.load(open(config_path))
+        self.clients = dict()
+        self.site = None
 
-    site = start()
+    def start(self):
+        for user, servers in self.config.items():
+            for server, config in servers.items():
+                chan = str(config["channels"][0])
+                port = config["port"]
+                client = ClientFactory(chan, str(user))
+                # This will break with more than one server, but works for now
+                self.clients[str(user)] = client
+                reactor.connectTCP(server, port, client)
+        self.site = web_start(self.clients)
+
+if __name__ == "__main__":
+    hashi = Hashi("config.json")
+    hashi.start()
 
     reactor.run()
