@@ -12,8 +12,6 @@ from zope.interface import implements
 
 
 class Hashioki(Resource):
-    isLeaf = True
-
     def getChild(self, name, request):
         if name == '':
             return self
@@ -23,7 +21,41 @@ class Hashioki(Resource):
         return """<html><p>If it existed, this would display the irc client for '{0}'.</p></html>""".format(request.irc_nick)
 
 
-class Channel(Resource):
+class API(Resource):
+    """RESTful API
+
+    Example URL: /freenode/#hashi/topic"""
+    def getChild(self, name, request):
+        print("API:", name)
+        if name == '':
+            return self
+        elif name == 'session':
+            return Resource.getChild(self, name, request)
+        else:
+            return IRCServer(name)
+
+    def render_GET(self, request):
+        return """<html><p>Should document the API here!</p></html>"""
+
+
+class APISession(Resource):
+    isLeaf = True
+
+    def render_GET(self, request):
+        return json.dumps(request.getSession().uid)
+
+    def render_POST(self, request):
+        request.getSession().expire()
+        return json.dumps(True)
+
+
+class IRCServer(Resource):
+    def __init__(self, name):
+        Resource.__init__(self)
+        self.name = name
+
+
+class IRCChannel(Resource):
     isLeaf = True
 
     def render_GET(self, request):
@@ -37,15 +69,6 @@ class Channel(Resource):
             if cmd == "leave":
                 request.irc_client.leave(arg[0])
         return ''
-
-
-class Privmsg(Resource):
-    isLeaf = True
-    def render_POST(self, request):
-        privmsg_cmd = parse_qs(request.content.getvalue())
-        target = privmsg_cmd["target"][0]
-        msg = privmsg_cmd["msg"][0]
-        request.irc_client.msg(target, msg, 240)
 
 
 class History(Resource):
@@ -82,12 +105,12 @@ class HashiUserRealm(object):
         raise NotImplementedError()
 
 def start(irc_clients):
-    rest_api = Hashioki()
-    rest_api.putChild('channel', Channel())
-    rest_api.putChild('privmsg', Privmsg())
-    rest_api.putChild('history', History())
+    root = Hashioki()
+    rest_api = API()
+    rest_api.putChild('session', APISession())
+    root.putChild('api', rest_api)
 
-    portal = Portal(HashiUserRealm(irc_clients, rest_api), 
+    portal = Portal(HashiUserRealm(irc_clients, root), 
                     [FilePasswordDB('httpd.password')])
     credentialFactory = DigestCredentialFactory("md5", "localhost:8080")
     resource = HTTPAuthSessionWrapper(portal, [credentialFactory])
