@@ -49,11 +49,37 @@ class APISession(Resource):
 
 
 class IRCNetwork(Resource):
+    def getChild(self, name, request):
+        if name == '':
+            return self
+        else:
+            return IRCServer(name)
+        
     def render_GET(self, request):
         return """<html><p>List of networks!</p></html>"""
 
+class IRCServer(Resource):
+    def __init__(self, name):
+        Resource.__init__(self)
+        self.name = name
+
+    def getChild(self, name, request):
+        if name == '':
+            return self
+        else:
+            return IRCChannel(name)
+
 class IRCChannel(Resource):
-    isLeaf = True
+    def __init__(self, name):
+        Resource.__init__(self)
+        self.name = name
+
+    def getChild(self, name, request):
+        if name == '':
+            return self
+        elif name == 'messages':
+            return IRCChannelMessages(self.name)
+        return Resource.getChild(self, name, request)
 
     def render_GET(self, request):
         return json.dumps(request.irc_client.channels)
@@ -68,13 +94,14 @@ class IRCChannel(Resource):
         return ''
 
 
-class History(Resource):
+class IRCChannelMessages(Resource):
     isLeaf = True
+    def __init__(self, name):
+        Resource.__init__(self)
+        self.name = name
 
     def render_GET(self, request):
-        print(request.irc_client.history)
-        print(request.args["source"])
-        return str(request.irc_client.history[request.args["source"][0]])
+        return str(request.irc_client.history[self.name])
 
 
 def irc_rewriter(avatarId, client):
