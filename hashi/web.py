@@ -47,6 +47,16 @@ class Privmsg(Resource):
         msg = privmsg_cmd["msg"][0]
         request.irc_client.msg(target, msg, 240)
 
+
+class History(Resource):
+    isLeaf = True
+
+    def render_GET(self, request):
+        print(request.irc_client.history)
+        print(request.args["source"])
+        return str(request.irc_client.history[request.args["source"][0]])
+
+
 def irc_rewriter(avatarId, client):
     def func(request):
         request.irc_nick = avatarId
@@ -75,6 +85,7 @@ def start(irc_clients):
     rest_api = Hashioki()
     rest_api.putChild('channel', Channel())
     rest_api.putChild('privmsg', Privmsg())
+    rest_api.putChild('history', History())
 
     portal = Portal(HashiUserRealm(irc_clients, rest_api), 
                     [FilePasswordDB('httpd.password')])

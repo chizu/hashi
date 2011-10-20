@@ -1,5 +1,6 @@
 import sys
 import json
+from collections import defaultdict
 
 from twisted.words.protocols import irc
 from twisted.internet import protocol, reactor
@@ -13,6 +14,7 @@ class Client(irc.IRCClient):
     
     def signedOn(self):
         self.channels = list()
+        self.history = defaultdict(list)
         self.factory.hashi.register_client(self)
         self.join(self.factory.channel)
         print("Signed on as {0}.".format(self.nickname))
@@ -26,7 +28,9 @@ class Client(irc.IRCClient):
         print("Left {0}.".format(channel))
 
     def privmsg(self, user, channel, msg):
-        print(msg)
+        nick = user.split('!')[0]
+        self.history[channel].append("< {0}> {1}".format(nick,msg))
+        print(user, channel, msg)
 
 
 class ClientFactory(protocol.ClientFactory):
