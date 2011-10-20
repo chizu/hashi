@@ -54,7 +54,7 @@ class IRCNetwork(Resource):
             return IRCServer(name)
         
     def render_GET(self, request):
-        return """<html><p>List of networks!</p></html>"""
+        return json.dumps(["sandbenders"])
 
 
 class IRCServer(Resource):
