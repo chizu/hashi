@@ -58,6 +58,7 @@ class IRCNetwork(Resource):
     def render_GET(self, request):
         return """<html><p>List of networks!</p></html>"""
 
+
 class IRCServer(Resource):
     def __init__(self, name):
         Resource.__init__(self)
@@ -68,6 +69,10 @@ class IRCServer(Resource):
             return self
         else:
             return IRCChannel(name)
+
+    def render_GET(self, request):
+        return json.dumps(request.irc_client.channels)
+
 
 class IRCChannel(Resource):
     def __init__(self, name):
@@ -81,16 +86,8 @@ class IRCChannel(Resource):
             return IRCChannelMessages(self.name)
         return Resource.getChild(self, name, request)
 
-    def render_GET(self, request):
-        return json.dumps(request.irc_client.channels)
-
     def render_POST(self, request):
-        chan_cmd = parse_qs(request.content.getvalue())
-        for cmd, arg in chan_cmd.items():
-            if cmd == "join":
-                request.irc_client.join(arg[0])
-            if cmd == "leave":
-                request.irc_client.leave(arg[0])
+        request.irc_client.join(self.name)
         return ''
 
 
