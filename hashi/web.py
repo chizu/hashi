@@ -26,7 +26,6 @@ class API(Resource):
 
     Example URL: /freenode/#hashi/topic"""
     def getChild(self, name, request):
-        print("API:", name)
         if name == '':
             return self
         elif name == 'session':
@@ -42,9 +41,11 @@ class APISession(Resource):
     isLeaf = True
 
     def render_GET(self, request):
+        """Return session uid."""
         return json.dumps(request.getSession().uid)
 
     def render_POST(self, request):
+        """Log out."""
         request.getSession().expire()
         return json.dumps(True)
 
