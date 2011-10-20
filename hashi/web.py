@@ -28,10 +28,8 @@ class API(Resource):
     def getChild(self, name, request):
         if name == '':
             return self
-        elif name == 'session':
-            return Resource.getChild(self, name, request)
         else:
-            return IRCServer(name)
+            return Resource.getChild(self, name, request)
 
     def render_GET(self, request):
         return """<html><p>Should document the API here!</p></html>"""
@@ -50,11 +48,9 @@ class APISession(Resource):
         return json.dumps(True)
 
 
-class IRCServer(Resource):
-    def __init__(self, name):
-        Resource.__init__(self)
-        self.name = name
-
+class IRCNetwork(Resource):
+    def render_GET(self, request):
+        return """<html><p>List of networks!</p></html>"""
 
 class IRCChannel(Resource):
     isLeaf = True
@@ -108,8 +104,10 @@ class HashiUserRealm(object):
 def start(irc_clients):
     root = Hashioki()
     rest_api = API()
-    rest_api.putChild('session', APISession())
     root.putChild('api', rest_api)
+    rest_api.putChild('session', APISession())
+    irc_network = IRCNetwork()
+    rest_api.putChild('networks', irc_network)
 
     portal = Portal(HashiUserRealm(irc_clients, root), 
                     [FilePasswordDB('httpd.password')])
