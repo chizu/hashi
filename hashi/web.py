@@ -7,6 +7,7 @@ from twisted.internet import reactor
 from twisted.web import server
 from twisted.web.guard import HTTPAuthSessionWrapper, DigestCredentialFactory
 from twisted.web.resource import Resource, IResource
+from twisted.web.static import File
 from twisted.web.rewrite import RewriterResource
 from zope.interface import implements
 
@@ -16,9 +17,6 @@ class Hashioki(Resource):
         if name == '':
             return self
         return Resource.getChild(self, name, request)
-
-    def render_GET(self, request):
-        return """<html><p>If it existed, this would display the irc client for '{0}'.</p></html>""".format(request.irc_nick)
 
 
 class API(Resource):
@@ -127,6 +125,8 @@ class HashiUserRealm(object):
 
 def start(irc_clients):
     root = Hashioki()
+    root.putChild('static', File('static'))
+
     rest_api = API()
     root.putChild('api', rest_api)
     rest_api.putChild('session', APISession())
