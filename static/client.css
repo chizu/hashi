@@ -1,0 +1,38 @@
+#irc {
+	color: rgb(180,180,180);
+	width: 100%;
+	height: 100%;
+	background: rgba(24, 24, 24, 0.8);
+}
+
+#irc #topic {
+	width: 100%;
+	border-bottom: 1px solid black;
+}
+
+#irc .window {
+	height: 90%;
+	font-family: 'Droid Sans Mono', sans-serif;
+}
+
+.ui-tabs-hide {
+	display: None;
+}
+
+#irc input {
+	width: 100%;
+	border: 1px solid black;
+}
+
+#irc #window-tabs {
+	padding: 0;
+	padding-left: 0.5em;
+	margin: 0;
+}
+
+#irc #window-tabs li {
+	display: inline;
+	list-style-type: none;
+	padding: 0.2em;
+	border: 1px solid black;
+}

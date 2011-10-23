@@ -4,8 +4,20 @@
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
     <script type="text/javascript" src="/static/client.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/client.css" />
   </head>
   <body>
-    <div id="root"></div>
+	<div id="irc">
+	  <div id="content">
+		<div id="topic">$topic$</div>
+		<div id="window-1" class="window">Window 1</div>
+		<div id="window-2" class="window">Window 2</div>
+		<form id="input"><input type="text" name="input"/></form>
+		<ul id="window-tabs">
+		  <li><a href="#window-1">$window 1$</a></li>
+		  <li><a href="#window-2">$window 2$</a></li>
+		</ul>
+	  </div>
+	</div>
   </body>
 </html>
