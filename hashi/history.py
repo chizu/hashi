@@ -1,8 +1,9 @@
+#!/usr/bin/env python
 import time
 from collections import namedtuple
 
 import redis
-
+import zmq
 
 class Identity(object):
     def __init__(self, redis, group, token):
@@ -56,3 +57,19 @@ class History(object):
         key = "observed:{group}:{identity}".format(group=self.irc_network,
                                                    identity=identity.token)
         self.redis.rpush(key, event_id)
+
+
+class RemoteEventReceiver(object):
+    def __init__(self):
+        context = zmq.Context.instance()
+        self.socket = context.socket(zmq.PULL)
+        self.socket.bind("tcp://127.0.0.1:9911")
+        
+    def dump_forever(self):
+        while True:
+            print(self.socket.recv_multipart())
+
+
+if __name__ == "__main__":
+    r = RemoteEventReceiver()
+    r.dump_forever()

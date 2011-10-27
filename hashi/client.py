@@ -16,7 +16,7 @@ class RemoteEventPublisher(object):
         self.socket.connect("tcp://127.0.0.1:9911")
 
     def event(self, kind, *args):
-        send = list(kind)
+        send = [self.identity, kind]
         send.extend(args)
         self.socket.send_multipart(send)
 
