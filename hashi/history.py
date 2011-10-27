@@ -1,44 +1,58 @@
-from sqlalchemy import *
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.sql import text
+import time
+from collections import namedtuple
+
+import redis
+
+
+class Identity(object):
+    def __init__(self, redis, group, token):
+        self.redis = redis
+        set_name = "identity:{group}".format(group=group)
+        self.redis.sadd(set_name, token)
+        self.token = token
+
+
+Event = namedtuple('Event', ['kind', 'source', 'target', 'content',
+                             'timestamp'])
+
 
 class History(object):
     """Interact with client history for a network."""
-    def __init__(self, irc_network, database_info="postgresql:///hashi"):
-        self.engine = create_engine(database_info)
-        self.session = sessionmaker(self.engine)()
+    def __init__(self, irc_network):
+        self.redis = redis.Redis()
         self.irc_network = irc_network
-        self.Base = declarative_base()
 
-        class Identity(self.Base):
-            """Unique identity of an IRC user or channel.
-        
-            Determining this varies greatly, but the naive solution is any nick is a particular identity. Most IRC networks have a more sphisiticated means of determining identity, but nick is the only universal identity concept to IRC."""
-            __tablename__ = 'identities_{0}'.format(self.irc_network)
-    
-            id = Column(Integer, primary_key=True)
-            token = Column(String, unique=True)
+    def identity(self, token):
+        return Identity(self.redis, self.irc_network, token)
 
-        self.Identity = Identity
+    def add_event(self, identity, event):
+        # Identity is the client that submitted this event
+        event_id = self.new_event(event)
+        self.observe_event(identity, event_id)
+        return event_id
 
-    def create_all(self):
-        self.Base.metadata.create_all(self.engine)
+    def new_event(self, event):
+        event_id = self.redis.incr("event.next")
+        event_key = "event:{id}".format(id=event_id)
+        self.redis.hmset(event_key, 
+                         {"kind": event.kind,
+                          "source": event.source.token,
+                          "target": event.target.token,
+                          "content": event.content,
+                          "timestamp": event.timestamp})
+        return event_id
 
-    def get_channel(self, identity):
-        identity_id = self.session.query(self.Identity).\
-            filter_by(token=name).one()
-        class Events(self.Base):
-            """List of all channels."""
-            __tablename__ == 'events_{network}_{ident}'.format(\
-                network=self.irc_network,
-                ident=identity_id)
+    def get_event(self, event_id):
+        event_key = "event:{id}".format(id=event_id)
+        values = self.redis.hvals(event_key)
+        return Event(*values)
 
-            id = Column(Integer, primary_key=True)
-            type = Column(Enum(["privmsg","action","topic","mode","part",
-                                "join"]))
-            value = Column(String)
-            source = Column(Integer, ForeignKey('identities.id'))
-            target = Column(Integer, ForeignKey('identities.id'))
+    def get_observed_history(self, identity, length=40):
+        key = "observed:{group}:{identity}".format(group=self.irc_network,
+                                                   identity=identity.token)
+        return (self.get_event(x) for x in self.redis.lrange(key, -40, -1))
 
-        return Events
+    def observe_event(self, identity, event_id):
+        key = "observed:{group}:{identity}".format(group=self.irc_network,
+                                                   identity=identity.token)
+        self.redis.rpush(key, event_id)
