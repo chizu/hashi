@@ -2,10 +2,24 @@ import sys
 import json
 from collections import defaultdict
 
+import zmq
 from twisted.words.protocols import irc
 from twisted.internet import protocol, reactor
 
-from web import start as web_start
+
+class RemoteEventPublisher(object):
+    def __init__(self, identity):
+        context = zmq.Context.instance()
+        self.identity = identity
+        self.socket = context.socket(zmq.PUSH)
+        self.socket.setsockopt(zmq.IDENTITY, identity)
+        self.socket.connect("tcp://127.0.0.1:9911")
+
+    def event(self, kind, *args):
+        send = list(kind)
+        send.extend(args)
+        self.socket.send_multipart(send)
+
 
 class Client(irc.IRCClient):
     def _get_nickname(self):
@@ -13,24 +27,21 @@ class Client(irc.IRCClient):
     nickname = property(_get_nickname)
     
     def signedOn(self):
+        self.publish = RemoteEventPublisher(self.factory.nickname)
         self.channels = list()
-        self.history = defaultdict(list)
-        self.factory.hashi.register_client(self)
         self.join(self.factory.channel)
-        print("Signed on as {0}.".format(self.nickname))
+        self.publish.event("signedOn", self.nickname)
         
     def joined(self, channel):
         self.channels.append(channel)
-        print("Joined {0}.".format(channel))
+        self.publish.event("joined", channel)
 
     def left(self, channel):
         self.channels.remove(channel)
-        print("Left {0}.".format(channel))
+        self.publish.event("left", channel)
 
     def privmsg(self, user, channel, msg):
-        nick = user.split('!')[0]
-        self.history[channel].append("< {0}> {1}".format(nick,msg))
-        print(user, channel, msg)
+        self.publish.event("privmsg", user, channel, msg)
 
 
 class ClientFactory(protocol.ClientFactory):
@@ -52,8 +63,6 @@ class ClientFactory(protocol.ClientFactory):
 class Hashi(object):
     def __init__(self, config_path):
         self.config = json.load(open(config_path))
-        self.clients = dict()
-        self.site = None
 
     def start(self):
         for user, servers in self.config.items():
@@ -62,11 +71,9 @@ class Hashi(object):
                 port = config["port"]
                 client_f = ClientFactory(self, chan, str(user))
                 reactor.connectTCP(server, port, client_f)
-        self.site = web_start(self.clients)
 
-    def register_client(self, client):
-        # This will break with more than one server per nick, but works for now
-        self.clients[client.nickname] = client
+    def broadcast_event(self, identity, event):
+        self.events.send_multipart([identity, " ", event])
 
 if __name__ == "__main__":
     hashi = Hashi("config.json")
