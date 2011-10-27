@@ -64,12 +64,26 @@ class RemoteEventReceiver(object):
         context = zmq.Context.instance()
         self.socket = context.socket(zmq.PULL)
         self.socket.bind("tcp://127.0.0.1:9911")
-        
-    def dump_forever(self):
-        while True:
-            print(self.socket.recv_multipart())
+        self.queries = context.socket(zmq.REP)
+        self.queries.bind("tcp://127.0.0.1:9922")
+        self.poller = zmq.Poller()
+        self.poller.register(self.socket, zmq.POLLIN)
+        self.poller.register(self.queries, zmq.POLLIN)
 
+    def run(self):
+        while True:
+            socks = dict(self.poller.poll())
+
+            # New history
+            if self.socket in socks and socks[self.socket] == zmq.POLLIN:
+                event = self.socket.recv_multipart()
+                identity, kind = event[:2]
+                print("{0}:{1}:{2}".format(identity, kind, event[2:]))
+
+            # Queries against the history
+            if self.queries in socks and socks[self.queries] == zmq.POLLIN:
+                pass
 
 if __name__ == "__main__":
     r = RemoteEventReceiver()
-    r.dump_forever()
+    r.run()
