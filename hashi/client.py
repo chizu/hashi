@@ -8,26 +8,34 @@ from twisted.internet import protocol, reactor
 
 
 class RemoteEventPublisher(object):
-    def __init__(self, identity):
+    def __init__(self, network, identity):
         context = zmq.Context.instance()
+        self.network = network
         self.identity = identity
         self.socket = context.socket(zmq.PUSH)
         self.socket.setsockopt(zmq.IDENTITY, identity)
         self.socket.connect("tcp://127.0.0.1:9911")
 
     def event(self, kind, *args):
-        send = [self.identity, kind]
+        send = [self.network, self.identity, kind]
         send.extend(args)
+        for i, value in enumerate(send):
+            if isinstance(value, unicode):
+                send[i] = value.encode("utf-8")
         self.socket.send_multipart(send)
 
 
 class Client(irc.IRCClient):
-    def _get_nickname(self):
+    @property
+    def nickname(self):
         return self.factory.nickname
-    nickname = property(_get_nickname)
-    
+
+    @property
+    def network(self):
+        return self.factory.network
+
     def signedOn(self):
-        self.publish = RemoteEventPublisher(self.factory.nickname)
+        self.publish = RemoteEventPublisher(self.network, self.nickname)
         self.channels = list()
         self.join(self.factory.channel)
         self.publish.event("signedOn", self.nickname)
@@ -47,8 +55,9 @@ class Client(irc.IRCClient):
 class ClientFactory(protocol.ClientFactory):
     protocol = Client
 
-    def __init__(self, hashi, channel, nickname='hashi'):
+    def __init__(self, hashi, network, channel, nickname='hashi'):
         self.hashi = hashi
+        self.network = network
         self.channel = channel
         self.nickname = nickname
 
@@ -69,7 +78,7 @@ class Hashi(object):
             for server, config in servers.items():
                 chan = str(config["channels"][0])
                 port = config["port"]
-                client_f = ClientFactory(self, chan, str(user))
+                client_f = ClientFactory(self, server, chan, str(user))
                 reactor.connectTCP(server, port, client_f)
 
     def broadcast_event(self, identity, event):
