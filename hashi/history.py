@@ -19,6 +19,7 @@ identity_registry = dict()
 
 class Identity(object):
     def __new__(cls, history, token):
+        print("Identity {0}".format(token))
         # Pull it out of cached objects if we can
         if token in identity_registry:
             return identity_registry[token]
@@ -41,16 +42,24 @@ class Identity(object):
         else:
             cur.execute("INSERT INTO identities (token) VALUES (%s)",
                         (token,))
+            print("Inserting token {0}".format(token))
             self.id = get_identity()[0]
         self.sql.commit()
         identity_registry[self.token] = self
 
 
 class NickIdentity(Identity):
+    @classmethod
+    def filter_token(cls, token):
+        return token.split("!")[0]
+
     def __new__(cls, history, token):
-        token = token.split("!")[0]
         # After modifying the token, do exactly as Identity
-        return Identity.__new__(NickIdentity, history, token)
+        return Identity.__new__(NickIdentity, history, cls.filter_token(token))
+
+    def __init__(self, history, token):
+        token = NickIdentity.filter_token(token)
+        super(NickIdentity, self).__init__(history, token)
 
 
 class History(object):
@@ -85,7 +94,7 @@ VALUES (%s, %s, %s, %s);"""
         # Record each kind of message, with a fallback for unimplemented ones
         if kind == 'privmsg':
             source = NickIdentity(self, args[0]).id
-            target = Identity(self, args[1]).id
+            target = NickIdentity(self, args[1]).id
             cur.execute(record_sql, (self.id, source, target, args[2:]))
         else:
             # No formatter, stuff it all into the args column (to prevent loss)
