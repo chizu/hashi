@@ -1,38 +1,37 @@
-#irc {
-	color: rgb(180,180,180);
-	width: 100%;
-	height: 100%;
-	background: rgba(24, 24, 24, 0.8);
+/* Override some defaults */
+html, body {
+    background-color: #eee;
+}
+body {
+    padding-top: 40px; /* 40px to make the container go all the way to the bottom of the topbar */
+}
+.container > footer p {
+    text-align: center; /* center align it with the container */
+}
+.container {
+    width: 820px; /* downsize our container to make the content feel a bit tighter and more cohesive. NOTE: this removes two full columns from the grid, meaning you only go to 14 columns and not 16. */
 }
 
-#irc #topic {
-	width: 100%;
-	border-bottom: 1px solid black;
+/* The white background content wrapper */
+.content {
+    background-color: #fff;
+    padding: 20px;
+    margin: 0 -20px; /* negative indent the amount of the padding to maintain the grid system */
+    -webkit-border-radius: 0 0 6px 6px;
+    -moz-border-radius: 0 0 6px 6px;
+    border-radius: 0 0 6px 6px;
+    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.15);
+    -moz-box-shadow: 0 1px 2px rgba(0,0,0,.15);
+    box-shadow: 0 1px 2px rgba(0,0,0,.15);
 }
 
-#irc .window {
-	height: 90%;
-	font-family: 'Droid Sans Mono', sans-serif;
+/* Page header tweaks */
+.page-header {
+    background-color: #f5f5f5;
+    padding: 20px 20px 10px;
+    margin: -20px -20px 20px;
 }
 
-.ui-tabs-hide {
-	display: None;
-}
-
-#irc input {
-	width: 100%;
-	border: 1px solid black;
-}
-
-#irc #window-tabs {
-	padding: 0;
-	padding-left: 0.5em;
-	margin: 0;
-}
-
-#irc #window-tabs li {
-	display: inline;
-	list-style-type: none;
-	padding: 0.2em;
-	border: 1px solid black;
+.sign-in {
+	padding: 8px;
 }

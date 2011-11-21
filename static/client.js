@@ -1,20 +1,32 @@
+function setSessions(val) {
+	if (navigator.id) {
+		navigator.id.sessions = val ? val : [ ];
+	}
+}
+
+function loggedIn(email) {
+	setSessions([ { email: email } ]);
+}
+
+function loggedOut() {
+	setSessions();
+}
+
 $(document).ready(function() {
-	$("#content").tabs();
-	base = "/api/networks";
-	$.getJSON(base, function(networks) {
-		network_count = networks.length;
-		for (var n=0; n < network_count; n++) {
-			var n_id = networks[n];
-			$("#root").append("<div id=\"" + n_id + "\"/>");
-			$("#"+n_id).addClass("network");
-			$.getJSON(base + "/" + networks[n], function (n_id) {
-				return function(channels) {
-					$(n_id).append("<ul></ul>");
-					$(n_id + " ul").addClass("channels");
-					$.map(channels, function (c) {
-						$(n_id + " ul").append("<li>"+c+"</li>");
-					});
-				}}("#"+n_id));
-		}
-	});
+    if (!navigator.id) {
+        $('#browserid').hide();
+        return;
+    }
+
+    $('#browserid').click(function() {
+		$('#browserid').css('opacity', '0.5');
+        navigator.id.getVerifiedEmail(function(assertion) {
+            if (assertion) {
+				alert("unverified login");
+            }
+			else {
+				alert("failed");
+			}
+        });
+    });
 });

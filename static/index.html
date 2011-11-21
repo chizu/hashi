@@ -2,19 +2,28 @@
   <head>
     <title>Hashi IRC</title>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+	<script src="https://browserid.org/include.js" type="text/javascript"></script>
     <script type="text/javascript" src="/static/client.js"></script>
     <link rel="stylesheet" href="http://twitter.github.com/bootstrap/1.4.0/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="/static/client.css" />
+	<link rel="stylesheet" type="text/css" href="/static/client.css" />
   </head>
   <body>
-	<div id="irc">
-	  <div id="content">
-		<div id="topic">$topic$</div>
-		<div id="window-1" class="window">Window 1</div>
-		<form id="input"><input type="text" name="input"/></form>
-		<ul id="window-tabs">
-		  <li><a href="#window-1">$window 1$</a></li>
-		</ul>
+    <div class="topbar">
+      <div class="fill">
+        <div class="container">
+          <a class="brand" href="#">Hashi</a>
+          <ul class="nav">
+          </ul>
+          <img id="browserid" src="https://browserid.org/i/sign_in_blue.png" class="sign-in pull-right" alt="Sign in" />
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <div class="content">
+		<div class="page-header">
+		  <h1>Web IRC Client <small>screen+irssi for this decade</small></h1>
+		</div>
+		Sign in to start.
 	  </div>
 	</div>
   </body>
