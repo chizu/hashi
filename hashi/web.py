@@ -1,12 +1,9 @@
 import json
 from urlparse import parse_qs
 
-from twisted.cred.portal import IRealm, Portal
-from twisted.cred.checkers import FilePasswordDB
 from twisted.internet import reactor
 from twisted.web import server
-from twisted.web.guard import HTTPAuthSessionWrapper, DigestCredentialFactory
-from twisted.web.resource import Resource, IResource
+from twisted.web.resource import Resource
 from twisted.web.static import File
 from twisted.web.rewrite import RewriterResource
 from zope.interface import implements
@@ -99,31 +96,7 @@ class IRCChannelMessages(Resource):
         return str(request.irc_client.history[self.name])
 
 
-def irc_rewriter(avatarId, client):
-    def func(request):
-        request.irc_nick = avatarId
-        request.irc_client = client
-    return func
-
-
-class HashiUserRealm(object):
-    implements(IRealm)
-
-    def __init__(self, irc_clients, rest_api):
-        self.irc_clients = irc_clients
-        self.rest_api = rest_api
-
-    def requestAvatar(self, avatarId, mind, *interfaces):
-        if IResource in interfaces:
-            client = self.irc_clients[avatarId]
-            rewrite = RewriterResource(self.rest_api, 
-                                       irc_rewriter(avatarId, client))
-            return (IResource,
-                    rewrite,
-                    lambda: None)
-        raise NotImplementedError()
-
-def start(irc_clients):
+def start():
     root = Hashioki()
     root.putChild('static', File('static'))
 
@@ -133,13 +106,13 @@ def start(irc_clients):
     irc_network = IRCNetwork()
     rest_api.putChild('networks', irc_network)
 
-    portal = Portal(HashiUserRealm(irc_clients, root), 
-                    [FilePasswordDB('httpd.password')])
-    credentialFactory = DigestCredentialFactory("md5", "localhost:8080")
-    resource = HTTPAuthSessionWrapper(portal, [credentialFactory])
-
-    site = server.Site(resource)
+    site = server.Site(rest_api)
 
     reactor.listenTCP(8080, site)
 
     return site
+
+
+if __name__ == '__main__':
+    site = start()
+    reactor.run()
