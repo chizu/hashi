@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import json
 from urlparse import parse_qs
 
