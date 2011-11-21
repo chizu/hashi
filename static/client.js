@@ -6,10 +6,32 @@ function setSessions(val) {
 
 function loggedIn(email) {
 	setSessions([ { email: email } ]);
+	$('#browserid').hide();
 }
 
 function loggedOut() {
 	setSessions();
+	$('#browserid').css('opacity', '1.0');
+}
+
+function gotVerifiedEmail(assertion) {
+    if (assertion !== null) {
+		$.ajax({
+			type: 'POST',
+			url: '/api/login',
+			data: { assertion: assertion },
+			success: function(res, status, xhr) {
+				if (res === null) loggedOut();
+				else loggedIn(res);
+			},
+			error: function(res, status, xhr) {
+				alert("login failure" + res);
+			}
+		});
+    }
+	else {
+		loggedOut();
+	}
 }
 
 $(document).ready(function() {
@@ -19,14 +41,7 @@ $(document).ready(function() {
     }
 
     $('#browserid').click(function() {
-		$('#browserid').css('opacity', '0.5');
-        navigator.id.getVerifiedEmail(function(assertion) {
-            if (assertion) {
-				alert("unverified login");
-            }
-			else {
-				alert("failed");
-			}
-        });
+		$('#browserid').css('opacity', '0.4');
+        navigator.id.getVerifiedEmail(gotVerifiedEmail);
     });
 });

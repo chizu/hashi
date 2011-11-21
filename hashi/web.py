@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import json
+import urllib
 from urlparse import parse_qs
 
 from twisted.internet import reactor
@@ -7,6 +8,7 @@ from twisted.web import server
 from twisted.web.resource import Resource
 from twisted.web.static import File
 from twisted.web.rewrite import RewriterResource
+from twisted.web.client import getPage
 from zope.interface import implements
 
 
@@ -42,6 +44,39 @@ class APISession(Resource):
         """Log out."""
         request.getSession().expire()
         return json.dumps(True)
+
+
+class APILogin(Resource):
+    isLeaf = True
+
+    def verify_login(self, browserid, request):
+        """Handle """
+        login = json.loads(browserid)
+        if login["status"] == "okay":
+            pass
+        else:
+            request.setResponseCode(403)
+        request.finish()
+
+    def render_POST(self, request):
+        """Handle logins from BrowserID"""
+        assertion = request.args["assertion"]
+        # Use the host header so that it doesn't matter where this is running
+        audience = request.received_headers["host"]
+        data = urllib.urlencode({"assertion": assertion, "audience": audience})
+        # Post to BrowserID
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        p = getPage("https://browserid.org/verify", method='POST',
+                    postdata=data, headers=headers)
+        p.addCallback(self.verify_login, request)
+        return server.NOT_DONE_YET
+
+class APILogout(Resource):
+    isLeaf = True
+
+    def render_POST(self, request):
+        """Handle logouts from BrowserID"""
+        
 
 
 class IRCNetwork(Resource):
@@ -104,6 +139,8 @@ def start():
     rest_api = API()
     root.putChild('api', rest_api)
     rest_api.putChild('session', APISession())
+    rest_api.putChild('login', APILogin())
+    rest_api.putChild('logout', APILogout())
     irc_network = IRCNetwork()
     rest_api.putChild('networks', irc_network)
 
