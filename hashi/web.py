@@ -53,7 +53,7 @@ class APILogin(Resource):
         """Handle """
         login = json.loads(browserid)
         if login["status"] == "okay":
-            pass
+            request.getSession().email = login["email"]
         else:
             request.setResponseCode(403)
         request.finish()
@@ -70,6 +70,18 @@ class APILogin(Resource):
                     postdata=data, headers=headers)
         p.addCallback(self.verify_login, request)
         return server.NOT_DONE_YET
+
+
+class APIWhoAmI(Resource):
+    isLeaf = True
+    
+    def render_GET(self, request):
+        session = request.getSession()
+        if hasattr(session, "email"):
+            return json.dumps(session.email)
+        else:
+            return json.dumps(None)
+
 
 class APILogout(Resource):
     isLeaf = True
@@ -140,6 +152,7 @@ def start():
     root.putChild('api', rest_api)
     rest_api.putChild('session', APISession())
     rest_api.putChild('login', APILogin())
+    rest_api.putChild('whoami', APIWhoAmI())
     rest_api.putChild('logout', APILogout())
     irc_network = IRCNetwork()
     rest_api.putChild('networks', irc_network)

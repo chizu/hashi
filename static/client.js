@@ -40,6 +40,11 @@ $(document).ready(function() {
         return;
     }
 
+	$.get('/api/whoami', function (res) {
+		if (res === null) loggedOut();
+		else loggedIn(res, true);
+	}, 'json');
+
     $('#browserid').click(function() {
 		$('#browserid').css('opacity', '0.4');
         navigator.id.getVerifiedEmail(gotVerifiedEmail);
