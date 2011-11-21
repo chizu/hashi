@@ -40,11 +40,6 @@ class APISession(Resource):
         """Return session uid."""
         return json.dumps(request.getSession().uid)
 
-    def render_POST(self, request):
-        """Log out."""
-        request.getSession().expire()
-        return json.dumps(True)
-
 
 class APILogin(Resource):
     isLeaf = True
@@ -54,6 +49,7 @@ class APILogin(Resource):
         login = json.loads(browserid)
         if login["status"] == "okay":
             request.getSession().email = login["email"]
+            request.write(json.dumps(login["email"]))
         else:
             request.setResponseCode(403)
         request.finish()
@@ -88,7 +84,8 @@ class APILogout(Resource):
 
     def render_POST(self, request):
         """Handle logouts from BrowserID"""
-        
+        request.getSession().expire()
+        return json.dumps(True)
 
 
 class IRCNetwork(Resource):
