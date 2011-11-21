@@ -106,7 +106,7 @@ def start():
     irc_network = IRCNetwork()
     rest_api.putChild('networks', irc_network)
 
-    site = server.Site(rest_api)
+    site = server.Site(root)
 
     reactor.listenTCP(8080, site)
 
