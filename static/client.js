@@ -45,7 +45,7 @@ function addServer() {
 		url: url,
 		data: $(this).serialize(),
 		success: function() {
-			$(this).modal('hide');
+			$('#new-server').modal('hide');
 		}
 	});
 }

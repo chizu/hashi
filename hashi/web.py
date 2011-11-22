@@ -56,12 +56,10 @@ class APILogin(Resource):
             request.getSession().email = email
             def existing_user(failure):
                 # Don't have to do much, just end the request
-                print("existing user")
                 print(failure)
                 request.write(json.dumps(email))
                 request.finish()
             def new_user(query_rows):
-                print("new user")
                 request.write(json.dumps(email))
                 request.finish()
             d = dbpool.runOperation("INSERT INTO users (email) VALUES (%s)", 
@@ -131,6 +129,9 @@ class IRCServer(Resource):
 
     def render_GET(self, request):
         return json.dumps(request.irc_client.channels)
+
+    def render_POST(self, request):
+        return json.dumps(True)
 
 
 class IRCChannel(Resource):
