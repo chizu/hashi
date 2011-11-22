@@ -1,8 +1,10 @@
+<!DOCTYPE HTML>
 <html>
   <head>
     <title>Hashi IRC</title>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
     <script type="text/javascript" src="http://twitter.github.com/bootstrap/1.4.0/bootstrap-dropdown.js"></script>
+    <script type="text/javascript" src="http://twitter.github.com/bootstrap/1.4.0/bootstrap-modal.js"></script>
 	<script src="https://browserid.org/include.js" type="text/javascript"></script>
     <script type="text/javascript" src="/static/client.js"></script>
     <link rel="stylesheet" href="http://twitter.github.com/bootstrap/1.4.0/bootstrap.min.css">
@@ -13,13 +15,13 @@
       <div class="fill">
         <div class="container">
           <a class="brand" href="#">Hashi</a>
-          <ul class="nav">
-			<li class="active"><a href="#Servers">Servers</a></li>
+          <ul class="nav logged-in" id="servers-nav">
+			<li class="active"><a href="#servers">Servers</a></li>
           </ul>
 		  <ul class="nav secondary-nav" id="usermenu">
 			<li>
-			  <img id="browserid" src="https://browserid.org/i/sign_in_blue.png" class="sign-in pull-right" alt="Sign in" />
-			  <a href="#" class="dropdown-toggle"></a>
+			  <img id="browserid" src="https://browserid.org/i/sign_in_blue.png" class="sign-in pull-right logged-out" alt="Sign in" />
+			  <a href="#" class="dropdown-toggle logged-in"></a>
 			  <ul class="dropdown-menu">
 				<li><a href="#" id="logout">Logout</a></li>
 			  </ul>
@@ -29,11 +31,47 @@
       </div>
     </div>
     <div class="container">
-      <div class="content">
+      <div class="content logged-out">
 		<div class="page-header">
 		  <h1>Web IRC Client <small>screen+irssi for this decade</small></h1>
 		</div>
 		Sign in to start.
+	  </div>
+      <div class="content logged-in">
+		<div class="page-header">
+		  <h1>Server Configuration <small>enter at least one IRC server</small>
+			<a class="btn primary pull-right" data-controls-modal="new-server" data-backdrop="static" >Add Server</a>
+		  </h1>
+		</div>
+		<form id="new-server" class="modal hide fade">
+		  <div class="modal-header">
+			<a href="#" class="close">&times;</a>
+			<h3>New Server</h3>
+		  </div>
+		  <div class="modal-body">
+			<div class="clearfix">
+			  <label for="hostname">Hostname</label>
+			  <div class="input">
+				<input class="xlarge" id="hostname" name="hostname" size="30" type="text" />
+			  </div>
+			</div>
+			<div class="clearfix">
+			  <label for="port">Port</label>
+			  <div class="input">
+				<div class="input-prepend">
+				  <label class="add-on">
+					<span id="ssl-label">SSL</span>
+					<input type="checkbox" name="ssl" id="ssl" value="" checked="true" />
+				  </label>
+				  <input class="small" id="port" name="port" size="16" type="number" value="6697" />
+				</div>
+			  </div>
+			</div>
+		  </div>
+		  <div class="modal-footer">
+			<input type="submit" class="btn primary" value="Connect" />&nbsp;<button type="reset" class="btn">Clear</button>
+		  </div>
+		</form>
 	  </div>
 	</div>
   </body>

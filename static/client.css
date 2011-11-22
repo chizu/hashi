@@ -35,3 +35,9 @@ body {
 .sign-in {
 	padding: 8px;
 }
+
+#ssl-label {
+	color: #404040;
+	text-shadow: None;
+	font-weight: bold;
+}

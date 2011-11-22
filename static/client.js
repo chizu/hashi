@@ -7,19 +7,21 @@ function setSessions(val) {
 function loggedIn(email) {
 	setSessions([ { email: email } ]);
 	$('#logout').bind('click', logout);
+	$('#new-server').modal({
+		keyboard: true,
+		backdrop: true
+	});
 	$('#usermenu').dropdown();
 	$('#usermenu .dropdown-toggle').html(email);
-	// Swap the buttons
-	$('#browserid').hide();
-	$('#usermenu .dropdown-toggle').show();
+	$('.logged-out').hide();
+	$('.logged-in').show();
 }
 
 function loggedOut() {
 	setSessions();
-	// Swap buttons back
-	$('#usermenu .dropdown-toggle').hide();
-	$('#browserid').show();
 	$('#browserid').css('opacity', '1.0');
+	$('.logged-in').hide();
+	$('.logged-out').show();
 }
 
 function logout(event) {
