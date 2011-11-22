@@ -7,6 +7,7 @@ function setSessions(val) {
 function loggedIn(email) {
 	setSessions([ { email: email } ]);
 	$('#logout').bind('click', logout);
+	$('#new-server').submit(addServer);
 	$('#new-server').modal({
 		keyboard: true,
 		backdrop: true
@@ -32,6 +33,19 @@ function logout(event) {
 		success: function() {
 			// and then redraw the UI.
 			loggedOut();
+		}
+	});
+}
+
+function addServer() {
+	event.preventDefault();
+	var url = '/api/networks/' + $('#hostname').val();
+	$.ajax({
+		type: 'POST',
+		url: url,
+		data: $(this).serialize(),
+		success: function() {
+			$(this).modal('hide');
 		}
 	});
 }
