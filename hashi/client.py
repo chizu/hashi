@@ -9,9 +9,6 @@ from twisted.words.protocols import irc
 from twisted.internet import protocol, reactor
 
 
-zf = ZmqFactory()
-
-
 class ZmqPushConnection(ZmqConnection):
     socketType = constants.PUSH
     def __init__(self, factory, identity, *endpoints):
@@ -19,11 +16,15 @@ class ZmqPushConnection(ZmqConnection):
         super(ZmqPushConnection, self).__init__(factory, *endpoints)
 
 
+class ZmqPullConnection(ZmqConnection):
+    socketType = constants.PULL
+
+
 class RemoteEventPublisher(object):
-    def __init__(self, network, identity):
-        e = ZmqEndpoint("connect", "tcp://127.0.0.1:9911")
+    def __init__(self, zf, network, identity):
         self.network = network
         self.identity = identity
+        e = ZmqEndpoint("connect", "tcp://127.0.0.1:9911")
         self.socket = ZmqPushConnection(zf, identity, e)
 
     def event(self, kind, *args):
@@ -45,7 +46,8 @@ class Client(irc.IRCClient):
         return self.factory.network
 
     def signedOn(self):
-        self.publish = RemoteEventPublisher(self.network, self.nickname)
+        zf = self.factory.hashi.zf
+        self.publish = RemoteEventPublisher(zf, self.network, self.nickname)
         self.channels = list()
         self.join(self.factory.channel)
         self.publish.event("signedOn", self.nickname)
@@ -79,9 +81,26 @@ class ClientFactory(protocol.ClientFactory):
         print("Could not connect: {0}" % (reason))
 
 
+class HashiController(ZmqPullConnection):
+    def __init__(self, zf, e, clients):
+        self.clients = clients
+        super(HashiController, self).__init__(zf, e)
+        
+    def messageReceived(self, message):
+        """Protocol is this:
+
+        Servers control: {user} global {command}
+        Connection control: {user} {server} {command}
+        """
+        user, server = message[:2]
+        command = message[2:]
+
 class Hashi(object):
     def __init__(self, config_path):
         self.config = json.load(open(config_path))
+        e = ZmqEndpoint("connect", "tcp://127.0.0.1:9911")
+        self.zf = ZmqFactory()
+        self.socket = HashiController(self.zf, e, )
 
     def start(self):
         for user, servers in self.config.items():
