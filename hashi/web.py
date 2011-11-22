@@ -3,6 +3,7 @@ import json
 import urllib
 from urlparse import parse_qs
 
+from twisted.enterprise import adbapi
 from twisted.internet import reactor
 from twisted.web import server
 from twisted.web.resource import Resource
@@ -10,6 +11,9 @@ from twisted.web.static import File
 from twisted.web.rewrite import RewriterResource
 from twisted.web.client import getPage
 from zope.interface import implements
+
+
+dbpool = adbapi.ConnectionPool("psycopg2", database='hashi')
 
 
 class Hashioki(Resource):
@@ -45,15 +49,30 @@ class APILogin(Resource):
     isLeaf = True
 
     def verify_login(self, browserid, request):
-        """Handle """
+        """Verify the BrowserID request was successful"""
         login = json.loads(browserid)
         if login["status"] == "okay":
-            request.getSession().email = login["email"]
-            request.write(json.dumps(login["email"]))
+            email = login["email"]
+            request.getSession().email = email
+            def existing_user(failure):
+                # Don't have to do much, just end the request
+                print("existing user")
+                print(failure)
+                request.write(json.dumps(email))
+                request.finish()
+            def new_user(query_rows):
+                print("new user")
+                request.write(json.dumps(email))
+                request.finish()
+            d = dbpool.runOperation("INSERT INTO users (email) VALUES (%s)", 
+                                    (email,))
+            d.addCallback(new_user)
+            d.addErrback(existing_user)
+            return d
         else:
             request.setResponseCode(403)
-        request.finish()
-
+            request.finish()
+            
     def render_POST(self, request):
         """Handle logins from BrowserID"""
         assertion = request.args["assertion"]
