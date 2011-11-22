@@ -91,8 +91,6 @@ class Hashi(object):
                 client_f = ClientFactory(self, server, chan, str(user))
                 reactor.connectTCP(server, port, client_f)
 
-    def broadcast_event(self, identity, event):
-        self.events.send_multipart([identity, " ", event])
 
 if __name__ == "__main__":
     hashi = Hashi("config.json")
