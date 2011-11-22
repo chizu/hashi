@@ -131,6 +131,8 @@ class IRCServer(Resource):
         return json.dumps(request.irc_client.channels)
 
     def render_POST(self, request):
+        print("Requested connection to...")
+        print(request.args)
         return json.dumps(True)
 
 
