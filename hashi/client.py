@@ -1,20 +1,30 @@
+#!/usr/bin/env python
 import sys
 import json
 from collections import defaultdict
 
-import zmq
+from zmq.core import constants
+from txZMQ import ZmqFactory, ZmqEndpoint, ZmqConnection
 from twisted.words.protocols import irc
 from twisted.internet import protocol, reactor
 
 
+zf = ZmqFactory()
+
+
+class ZmqPushConnection(ZmqConnection):
+    socketType = constants.PUSH
+    def __init__(self, factory, identity, *endpoints):
+        self.identity = identity
+        super(ZmqPushConnection, self).__init__(factory, *endpoints)
+
+
 class RemoteEventPublisher(object):
     def __init__(self, network, identity):
-        context = zmq.Context.instance()
+        e = ZmqEndpoint("connect", "tcp://127.0.0.1:9911")
         self.network = network
         self.identity = identity
-        self.socket = context.socket(zmq.PUSH)
-        self.socket.setsockopt(zmq.IDENTITY, identity)
-        self.socket.connect("tcp://127.0.0.1:9911")
+        self.socket = ZmqPushConnection(zf, identity, e)
 
     def event(self, kind, *args):
         send = [self.network, self.identity, kind]
@@ -22,7 +32,7 @@ class RemoteEventPublisher(object):
         for i, value in enumerate(send):
             if isinstance(value, unicode):
                 send[i] = value.encode("utf-8")
-        self.socket.send_multipart(send)
+        self.socket.send(send)
 
 
 class Client(irc.IRCClient):
