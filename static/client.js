@@ -72,19 +72,30 @@ function listServers() {
 	});
 }
 
+function addServerClear() {
+	$('#hostname').parent().parent().removeClass("error");
+	$('#hostname').next('.help-inline').empty();
+}
+
 function addServer() {
 	event.preventDefault();
 	$.ajax({
 		type: 'POST',
 		url: '/api/networks',
 		data: $(this).serialize(),
+		dataType: 'json',
 		success: function() {
 			$('#new-server').modal('hide');
 			// Connect to a new server by default
 			toggleServer($('#hostname').val(), true);
 		},
-		error: function(res, status, xhr) {
-			alert("addServer failed: "+res);
+		error: function(xhr, status, error) {
+			if (xhr.status == 409) {
+				$('#hostname').keypress(addServerClear);
+			}
+			$('#hostname').parent().parent().addClass("error");
+			var error = $.parseJSON(xhr.responseText);
+			$('#hostname').next('.help-inline').text(error);
 		}
 	});
 }

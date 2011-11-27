@@ -3,6 +3,7 @@ import json
 import urllib
 from urlparse import parse_qs
 
+from psycopg2 import IntegrityError, errorcodes
 from twisted.enterprise import adbapi
 from twisted.internet import reactor
 from twisted.web import server
@@ -128,9 +129,20 @@ FROM servers LEFT JOIN server_configs ON (servers.id = server_configs.server_id)
         return server.NOT_DONE_YET
 
     def add_server(self, added, request):
-        request.getSession().email
         request.write(json.dumps(True))
         request.finish()
+
+    def add_server_error(self, failure, request):
+        if type(failure.value) is IntegrityError and\
+                failure.value.pgcode == errorcodes.UNIQUE_VIOLATION:
+            # Conflict is probably what went wrong
+            request.setResponseCode(409)
+            request.write(json.dumps("already exists"))
+        else:
+            # Unknown failures
+            request.setResponseCode(500)
+            request.write(json.dumps("unknown error"))
+        request.finish()                  
 
     def render_POST(self, request):
         print("Adding new server: {0}".format(str(request.args)))
@@ -146,6 +158,7 @@ VALUES (%s, %s, %s)"""
         d = dbpool.runOperation(new_sql,
                                 (hostname, port, ssl))
         d.addCallback(self.add_server, request)
+        d.addErrback(self.add_server_error, request)
         return server.NOT_DONE_YET
 
 
