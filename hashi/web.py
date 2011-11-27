@@ -26,7 +26,7 @@ class Hashioki(Resource):
 class API(Resource):
     """RESTful API
 
-    Example URL: /freenode/#hashi/topic"""
+    Example URL: /network/irc.freenode.org/#hashi/topic"""
     def getChild(self, name, request):
         if name == '':
             return self
@@ -115,6 +115,27 @@ class IRCNetwork(Resource):
     def render_GET(self, request):
         return json.dumps(["sandbenders"])
 
+    def add_server(self, added, request):
+        request.getSession().email
+        request.write(json.dumps(True))
+        request.finish()
+
+    def render_POST(self, request):
+        print("Adding new server: {0}".format(str(request.args)))
+        new_sql = """INSERT INTO servers (hostname, port, ssl)
+VALUES (%s, %s, %s)"""
+        hostname = request.args["hostname"][0]
+        # Cast to int seems required? Should use JSON maybe to avoid this...
+        port = request.args["port"][0]
+        if "ssl" in request.args:
+            ssl = True
+        else:
+            ssl = False
+        d = dbpool.runOperation(new_sql,
+                                (hostname, port, ssl))
+        d.addCallback(self.add_server, request)
+        return server.NOT_DONE_YET
+
 
 class IRCServer(Resource):
     def __init__(self, name):
@@ -132,6 +153,7 @@ class IRCServer(Resource):
 
     def render_POST(self, request):
         print("Requested connection to...")
+        print(self.name)
         print(request.args)
         return json.dumps(True)
 
