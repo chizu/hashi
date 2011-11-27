@@ -39,13 +39,32 @@ function logout(event) {
 
 function addServer() {
 	event.preventDefault();
-	var url = '/api/networks/' + $('#hostname').val();
 	$.ajax({
 		type: 'POST',
-		url: url,
+		url: '/api/networks',
 		data: $(this).serialize(),
 		success: function() {
+			// Connect to a new server by default
+			toggleServer($('#hostname').val(), true);
 			$('#new-server').modal('hide');
+		},
+		error: function(res, status, xhr) {
+			alert("addServer failed: "+res);
+		}
+	});
+}
+
+function toggleServer(server, toggle) {
+	$.ajax({
+		type: 'POST',
+		url: '/api/networks/' + server,
+		data: toggle,
+		dataType: 'json',
+		success: function() {
+			alert("Toggle server should do something ;_;");
+		},
+		error: function(res, status, xhr) {
+			alert("toggleServer failed: "+res);
 		}
 	});
 }
@@ -55,6 +74,7 @@ function gotVerifiedEmail(assertion) {
 		$.ajax({
 			type: 'POST',
 			url: '/api/login',
+			dataType: 'json',
 			data: { assertion: assertion },
 			success: function(res, status, xhr) {
 				if (res === null) loggedOut();
