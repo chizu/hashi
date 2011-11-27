@@ -5,8 +5,12 @@ from collections import defaultdict
 
 from zmq.core import constants
 from txZMQ import ZmqFactory, ZmqEndpoint, ZmqConnection
-from twisted.words.protocols import irc
+from twisted.enterprise import adbapi
 from twisted.internet import protocol, reactor
+from twisted.words.protocols import irc
+
+
+dbpool = adbapi.ConnectionPool("psycopg2", database='hashi')
 
 
 class ZmqPushConnection(ZmqConnection):
@@ -67,8 +71,7 @@ class Client(irc.IRCClient):
 class ClientFactory(protocol.ClientFactory):
     protocol = Client
 
-    def __init__(self, hashi, network, channel, nickname='hashi'):
-        self.hashi = hashi
+    def __init__(self, network, channel, nickname='hashi'):
         self.network = network
         self.channel = channel
         self.nickname = nickname
@@ -94,21 +97,44 @@ class HashiController(ZmqPullConnection):
         """
         user, server = message[:2]
         command = message[2:]
+        subject = self.clients[user]
+        # If there's a server specified, pick that server here
+        if server:
+            subject = subject[server]
+        # Otherwise, the iterable subject means for all servers
+        pass
+
 
 class Hashi(object):
     def __init__(self, config_path):
+        # Dict of all clients indexed by email
+        self.clients = defaultdict(list)
         self.config = json.load(open(config_path))
         e = ZmqEndpoint("connect", "tcp://127.0.0.1:9911")
         self.zf = ZmqFactory()
-        self.socket = HashiController(self.zf, e, )
+        self.socket = HashiController(self.zf, e, self.clients)
 
     def start(self):
-        for user, servers in self.config.items():
-            for server, config in servers.items():
-                chan = str(config["channels"][0])
-                port = config["port"]
-                client_f = ClientFactory(self, server, chan, str(user))
-                reactor.connectTCP(server, port, client_f)
+        """Initialize the IRC client.
+
+        Load existing configuration and join all clients."""
+        start_sql = """SELECT user_email, hostname, port, nick
+FROM servers JOIN server_configs ON (servers.id = server_configs.server_id)
+WHERE server_configs.enabled = true;
+"""
+        d = dbpool.runQuery(start_sql)
+        d.addCallback(self.server_init)
+        return d
+
+    def server_init(self, servers_config):
+        for email, hostname, port, nick in servers_config:
+            client_f = ClientFactory(self, hostname, chan, nick)
+            d = reactor.connectTCP(hostname, port, client_f)
+            d.addCallback(self.register_client, email)
+
+    def register_client(self, client, email):
+        self.clients[email].append(client)
+        print("Registered '{0}' for user '{1}'".format(client.network, email))
 
 
 if __name__ == "__main__":
