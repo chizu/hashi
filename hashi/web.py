@@ -111,9 +111,21 @@ class IRCNetwork(Resource):
             return self
         else:
             return IRCServer(name)
-        
+
+    def list_servers(self, server_list, request):
+        print(server_list)
+        if server_list:
+            request.write(json.dumps(server_list))
+        else:
+            request.write(json.dumps(None))
+        request.finish()
+
     def render_GET(self, request):
-        return json.dumps(["sandbenders"])
+        list_sql = """SELECT user_email, hostname, port, nick
+FROM servers LEFT JOIN server_configs ON (servers.id = server_configs.server_id);"""
+        d = dbpool.runQuery(list_sql)
+        d.addCallback(self.list_servers, request)
+        return server.NOT_DONE_YET
 
     def add_server(self, added, request):
         request.getSession().email
