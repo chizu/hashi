@@ -12,6 +12,7 @@ function loggedIn(email) {
 		keyboard: true,
 		backdrop: true
 	});
+	listServers();
 	$('#usermenu').dropdown();
 	$('#usermenu .dropdown-toggle').html(email);
 	$('.logged-out').hide();
@@ -37,6 +38,40 @@ function logout(event) {
 	});
 }
 
+function listServers() {
+	$("#server-list tbody tr").remove();
+	$.getJSON('/api/networks', function (server_list) {
+		$.each(server_list, function(index, val) {
+			var cols = new Array();
+			// Enabled server
+			if (val[0]) {
+				cols[0] = '<td><input type="checkbox" class="server-disable" checked /></td>';
+			}
+			else {
+				cols[0] = '<td><input type="checkbox" class="server-enable" /></td>';
+			}
+			cols[1] = '<td>'+val[1]+'</td>';
+			cols[2] = '<td>'+val[2]+'</td>';
+			// SSL heart or skull
+			if (val[3]) {
+				// Remove disabled when this is implemented
+				cols[3] = '<td><span class="ssl btn success small disabled">\u2665</span></td>';
+			}
+			else {
+				cols[3] = '<td><span class="ssl btn important small disabled">\u2620</td>';
+			}
+			// Nick configured yet?
+			if (val[4]) {
+				cols[4] = '<td><input type="text" value="'+val[4]+'" /></td>';
+			}
+			else {
+				cols[4] = '<td><input type="text" class="error" /></td>';
+			}
+			$('#server-list > tbody:last').append('<tr>'+cols.join()+'</tr>');
+		});
+	});
+}
+
 function addServer() {
 	event.preventDefault();
 	$.ajax({
@@ -44,9 +79,9 @@ function addServer() {
 		url: '/api/networks',
 		data: $(this).serialize(),
 		success: function() {
+			$('#new-server').modal('hide');
 			// Connect to a new server by default
 			toggleServer($('#hostname').val(), true);
-			$('#new-server').modal('hide');
 		},
 		error: function(res, status, xhr) {
 			alert("addServer failed: "+res);
@@ -61,7 +96,8 @@ function toggleServer(server, toggle) {
 		data: toggle,
 		dataType: 'json',
 		success: function() {
-			alert("Toggle server should do something ;_;");
+			// Refresh the list on success
+			listServers();
 		},
 		error: function(res, status, xhr) {
 			alert("toggleServer failed: "+res);

@@ -121,7 +121,7 @@ class IRCNetwork(Resource):
         request.finish()
 
     def render_GET(self, request):
-        list_sql = """SELECT user_email, hostname, port, nick
+        list_sql = """SELECT user_email, hostname, port, ssl, nick
 FROM servers LEFT JOIN server_configs ON (servers.id = server_configs.server_id);"""
         d = dbpool.runQuery(list_sql)
         d.addCallback(self.list_servers, request)
@@ -163,11 +163,35 @@ class IRCServer(Resource):
     def render_GET(self, request):
         return json.dumps(request.irc_client.channels)
 
+    def connect_server(self, result, request):
+        request.write(json.dumps(True))
+        request.finish()
+
     def render_POST(self, request):
         print("Requested connection to...")
         print(self.name)
         print(request.args)
-        return json.dumps(True)
+        email = request.getSession().email
+        nick = "herpderp"
+        # Upsert is fancy...
+        connect_sql = """
+UPDATE server_configs SET enabled = true
+WHERE user_email = %s
+AND server_id = (SELECT server_id FROM servers WHERE hostname = %s);
+
+INSERT INTO server_configs (user_email, server_id, nick, enabled)
+SELECT %s, servers.id, %s, %s
+FROM servers
+WHERE hostname = %s
+AND NOT EXISTS (SELECT 1 FROM server_configs 
+                WHERE user_email = %s AND server_id = servers.id);"""
+        d = dbpool.runOperation(connect_sql,
+                                (email, # UPDATE
+                                 self.name, # UPDATE subquery
+                                 email, nick, True, self.name, # INSERT
+                                 email)) # INSERT subquery
+        d.addCallback(self.connect_server, request)
+        return server.NOT_DONE_YET
 
 
 class IRCChannel(Resource):
