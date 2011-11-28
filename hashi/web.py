@@ -4,17 +4,17 @@ import urllib
 from urlparse import parse_qs
 
 from psycopg2 import IntegrityError, errorcodes
-from twisted.enterprise import adbapi
+from txZMQ import ZmqEndpoint
 from twisted.internet import reactor
 from twisted.web import server
 from twisted.web.resource import Resource
 from twisted.web.static import File
-from twisted.web.rewrite import RewriterResource
 from twisted.web.client import getPage
 from zope.interface import implements
 
-
-dbpool = adbapi.ConnectionPool("psycopg2", database='hashi')
+from connections import *
+e = ZmqEndpoint("connect", "tcp://127.0.0.1:9912")
+irc_client = ZmqPushConnection(zmqfactory, "hashi-web", e)
 
 
 class Hashioki(Resource):

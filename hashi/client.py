@@ -4,27 +4,13 @@ import json
 from collections import defaultdict
 
 from zmq.core import constants
-from txZMQ import ZmqFactory, ZmqEndpoint, ZmqConnection
-from twisted.enterprise import adbapi
+from txZMQ import ZmqEndpoint
 from twisted.internet import protocol, reactor
 from twisted.internet.endpoints import TCP4ClientEndpoint, SSL4ClientEndpoint
 from twisted.internet.ssl import ClientContextFactory
 from twisted.words.protocols import irc
 
-
-dbpool = adbapi.ConnectionPool("psycopg2", database='hashi')
-zmqfactory = ZmqFactory()
-
-
-class ZmqPushConnection(ZmqConnection):
-    socketType = constants.PUSH
-    def __init__(self, factory, identity, *endpoints):
-        self.identity = identity
-        super(ZmqPushConnection, self).__init__(factory, *endpoints)
-
-
-class ZmqPullConnection(ZmqConnection):
-    socketType = constants.PULL
+from connections import *
 
 
 class RemoteEventPublisher(object):
@@ -111,7 +97,7 @@ class HashiController(ZmqPullConnection):
 class Hashi(object):
     def __init__(self, config_path):
         # Dict of all clients indexed by email
-        self.clients = defaultdict(list)
+        self.clients = defaultdict(dict)
         self.config = json.load(open(config_path))
         e = ZmqEndpoint("connect", "tcp://127.0.0.1:9911")
         self.socket = HashiController(zmqfactory, e, self.clients)
@@ -142,8 +128,9 @@ WHERE server_configs.enabled = true;
             d.addCallback(self.register_client, email)
 
     def register_client(self, client, email):
-        self.clients[email].append(client)
+        self.clients[email][client.network] = client
         print("Registered '{0}' for user '{1}'".format(client.network, email))
+        print(self.clients)
 
 
 if __name__ == "__main__":
