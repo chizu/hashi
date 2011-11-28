@@ -50,10 +50,9 @@ class Client(irc.IRCClient):
         return self.factory.network
 
     def signedOn(self):
+        self.channels = list()
         zf = self.factory.hashi.zf
         self.publish = RemoteEventPublisher(zf, self.network, self.nickname)
-        self.channels = list()
-        self.join(self.factory.channel)
         self.publish.event("signedOn", self.nickname)
         
     def joined(self, channel):
@@ -71,9 +70,8 @@ class Client(irc.IRCClient):
 class ClientFactory(protocol.ClientFactory):
     protocol = Client
 
-    def __init__(self, network, channel, nickname='hashi'):
+    def __init__(self, network, nickname='hashi'):
         self.network = network
-        self.channel = channel
         self.nickname = nickname
 
     def clientConnectionLost(self, connector, reason):
