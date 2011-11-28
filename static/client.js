@@ -87,7 +87,7 @@ function addServer() {
 		success: function() {
 			$('#new-server').modal('hide');
 			// Connect to a new server by default
-			toggleServer($('#hostname').val(), true);
+			serverSettings($('#hostname').val(), true, $('#nick').val());
 		},
 		error: function(xhr, status, error) {
 			if (xhr.status == 409) {
@@ -100,11 +100,11 @@ function addServer() {
 	});
 }
 
-function toggleServer(server, toggle) {
+function serverSettings(server, enabled, nick) {
 	$.ajax({
 		type: 'POST',
 		url: '/api/networks/' + server,
-		data: toggle,
+		data: {'enabled':enabled, 'nick':nick},
 		dataType: 'json',
 		success: function() {
 			// Refresh the list on success

@@ -181,11 +181,10 @@ class IRCServer(Resource):
         request.finish()
 
     def render_POST(self, request):
-        print("Requested connection to...")
-        print(self.name)
-        print(request.args)
+        print("Requested connection to {0}".format(self.name))
         email = request.getSession().email
-        nick = "herpderp"
+        nick = request.args["nick"][0]
+        enabled = (request.args["enabled"][0] == "true")
         # Upsert is fancy...
         connect_sql = """
 UPDATE server_configs SET enabled = true
