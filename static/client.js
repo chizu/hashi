@@ -58,16 +58,16 @@ function listServers() {
 				cols[3] = '<td><span class="ssl btn success small disabled">\u2665</span></td>';
 			}
 			else {
-				cols[3] = '<td><span class="ssl btn important small disabled">\u2620</td>';
+				cols[3] = '<td><span class="ssl btn danger small disabled">\u2620</td>';
 			}
 			// Nick configured yet?
 			if (val[4]) {
-				cols[4] = '<td><input type="text" value="'+val[4]+'" /></td>';
+				cols[4] = '<td><input type="text" class="disabled" value="'+val[4]+'" /></td>';
 			}
 			else {
-				cols[4] = '<td><input type="text" class="error" /></td>';
+				cols[4] = '<td><input type="text" class="disabled" /></td>';
 			}
-			$('#server-list > tbody:last').append('<tr>'+cols.join()+'</tr>');
+			$('#server-list > tbody:last').append('<tr><form>'+cols.join()+'</form></tr>');
 		});
 	});
 }
