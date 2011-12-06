@@ -71,34 +71,45 @@ class ClientFactory(protocol.ClientFactory):
 
 
 class HashiController(ZmqPullConnection):
-    def __init__(self, zf, e, clients):
-        self.clients = clients
+    def __init__(self, zf, e, hashi):
+        self.hashi = hashi
         super(HashiController, self).__init__(zf, e)
-        
+
+    def connectCallback(self, rows, user, nick):
+        hostname, port, ssl = rows[0]
+        self.hashi.server_connect(user, hostname, port, ssl, nick)
+
     def messageReceived(self, message):
         """Protocol is this:
 
-        Servers control: {user} global {command}
-        Connection control: {user} {server} {command}
+        Servers control: {user} global {command} {arguments...}
+        Connection control: {user} {server} {command} {arguments...}
         """
         user, server = message[:2]
-        command = message[2:]
-        subject = self.clients[user]
+        command = message[2]
+        if len(message) >= 3:
+            command_args = message[3:]
+        else:
+            command_args = None
+        subject = self.hashi.clients[user]
         # If there's a server specified, pick that server here
         if server != "global":
             subject = subject[server]
         # Otherwise, the iterable subject means for all servers
         if command == 'connect':
-            pass
+            # Arguments are hostname, nick
+            start_sql = """SELECT hostname, port, ssl
+FROM servers WHERE hostname = %s;"""
+            d = dbpool.runQuery(start_sql, (hostname,))
+            d.addCallback(self.connectCallback, user, nick)
         elif command == 'join':
             pass
 
 
 class Hashi(object):
-    def __init__(self, config_path):
+    def __init__(self):
         # Dict of all clients indexed by email
         self.clients = defaultdict(dict)
-        self.config = json.load(open(config_path))
         e = ZmqEndpoint("connect", "tcp://127.0.0.1:9911")
         self.socket = HashiController(zmqfactory, e, self.clients)
         self.ssl_context = ClientContextFactory()
@@ -117,15 +128,18 @@ WHERE server_configs.enabled = true;
 
     def server_init(self, servers_config):
         for email, hostname, port, ssl, nick in servers_config:
-            # We're reusing hostnames as network names for now
-            client_f = ClientFactory(hostname, nick)
-            if ssl:
-                point = SSL4ClientEndpoint(reactor, hostname, port,
-                                           self.ssl_context)
-            else:
-                point = TCP4ClientEndpoint(reactor, hostname, port)
-            d = point.connect(client_f)
-            d.addCallback(self.register_client, email)
+            self.server_connect(email, hostname, port, ssl, nick)
+
+    def server_connect(self, email, hostname, port, ssl, nick):
+        # We're reusing hostnames as network names for now
+        client_f = ClientFactory(hostname, nick)
+        if ssl:
+            point = SSL4ClientEndpoint(reactor, hostname, port,
+                                       self.ssl_context)
+        else:
+            point = TCP4ClientEndpoint(reactor, hostname, port)
+        d = point.connect(client_f)
+        d.addCallback(self.register_client, email)
 
     def register_client(self, client, email):
         self.clients[email][client.network] = client
@@ -134,7 +148,7 @@ WHERE server_configs.enabled = true;
 
 
 if __name__ == "__main__":
-    hashi = Hashi("config.json")
+    hashi = Hashi()
     hashi.start()
 
     reactor.run()

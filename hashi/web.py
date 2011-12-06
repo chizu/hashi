@@ -176,7 +176,13 @@ class IRCServer(Resource):
     def render_GET(self, request):
         return json.dumps(request.irc_client.channels)
 
-    def connect_server(self, result, request):
+    def connect_server(self, result, request, nick):
+        email = request.getSession().email
+        # Tell the IRC client when a server is added so it can refresh
+        irc_client.send([email, "global", "connect", self.name, nick])
+        # Maybe this should be in a callback?
+        # Refreshing the web interface here will sometimes be too fast.
+        # Timing bugs!
         request.write(json.dumps(True))
         request.finish()
 
@@ -202,7 +208,7 @@ AND NOT EXISTS (SELECT 1 FROM server_configs
                                  self.name, # UPDATE subquery
                                  email, nick, True, self.name, # INSERT
                                  email)) # INSERT subquery
-        d.addCallback(self.connect_server, request)
+        d.addCallback(self.connect_server, request, nick)
         return server.NOT_DONE_YET
 
 
