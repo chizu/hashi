@@ -67,7 +67,10 @@ function listServers() {
 			else {
 				cols[4] = '<td><input type="text" class="disabled" /></td>';
 			}
+			// Server configuration line
 			$('#server-list > tbody:last').append('<tr><form>'+cols.join()+'</form></tr>');
+			// Nav bar
+			$('#servers-nav').append('<li><a href="#'+val[1]+'">'+val[1]+'</a></li>');
 		});
 	});
 }
