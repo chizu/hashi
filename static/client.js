@@ -40,6 +40,8 @@ function logout(event) {
 
 function switchServerTab() {
 	var hostname_id = '#'+this.href.split('#')[1];
+	$('#servers-nav .active').removeClass('active');
+	$(this).parent().addClass('active');
 	$('#servers .active').removeClass('active');
 	$('#servers').find(hostname_id).addClass('active');
 }
