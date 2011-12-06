@@ -38,6 +38,19 @@ function logout(event) {
 	});
 }
 
+function switchServerTab() {
+	var hostname_id = '#'+this.href.split('#')[1];
+	$('#servers .active').removeClass('active');
+	$('#servers').find(hostname_id).addClass('active');
+}
+
+function addServerTab(hostname) {
+	hostname_id = hostname.replace(/\./g,'-');
+	$('#servers-nav').append('<li><a href="#'+hostname_id+'">'+hostname+'</a></li>');
+	$('#servers-nav a').click(switchServerTab);
+	$('#servers').append('<div class="content" id="'+hostname_id+'">Fillller</div>');
+}
+
 function listServers() {
 	$("#server-list tbody tr").remove();
 	$.getJSON('/api/networks', function (server_list) {
@@ -69,8 +82,7 @@ function listServers() {
 			}
 			// Server configuration line
 			$('#server-list > tbody:last').append('<tr><form>'+cols.join()+'</form></tr>');
-			// Nav bar
-			$('#servers-nav').append('<li><a href="#'+val[1]+'">'+val[1]+'</a></li>');
+			addServerTab(val[1]);
 		});
 	});
 }
