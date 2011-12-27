@@ -38,6 +38,27 @@ function logout(event) {
 	});
 }
 
+function hostnameId(hostname) {
+	return hostname.replace(/\./g,'-');
+}
+
+function serverControls(hostname_id) {
+	return '<ul class="tabs channels-nav"><li class="active"><a href="'+hostname_id+'-server">Server</a></li></ul><div class="pill-content"><div class="active" id="'+hostname_id+'-server"><input class="xlarge" name="'+hostname_id+'" size="30" type="text"/></div></div>';
+}
+
+function listChannels(hostname) {
+	var url = '/api/networks/'+hostname;
+	var hostname_id = '#' + hostnameId(hostname);
+	$(hostname_id).append(serverControls(hostname_id));
+	$.getJSON(url, function (channel_list) {
+		$.each(channel_list, function(index, val) {
+			// Fixme: Will break with multiple servers
+			$('.channels-nav').append('<li><a href="'+val+'">'+val+'</a></li>');
+		});
+	});
+	$('.tabs').tabs();
+}
+
 function switchServerTab() {
 	var hostname_id = '#'+this.href.split('#')[1];
 	$('#servers-nav .active').removeClass('active');
@@ -47,10 +68,11 @@ function switchServerTab() {
 }
 
 function addServerTab(hostname) {
-	hostname_id = hostname.replace(/\./g,'-');
+	var hostname_id = hostnameId(hostname);
 	$('#servers-nav').append('<li><a href="#'+hostname_id+'">'+hostname+'</a></li>');
 	$('#servers-nav a').click(switchServerTab);
-	$('#servers').append('<div class="content" id="'+hostname_id+'">Fillller</div>');
+	$('#servers').append('<div class="content" id="'+hostname_id+'"></div>');
+	listChannels(hostname);
 }
 
 function listServers() {

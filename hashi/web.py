@@ -174,7 +174,8 @@ class IRCServer(Resource):
             return IRCChannel(name)
 
     def render_GET(self, request):
-        return json.dumps(request.irc_client.channels)
+        # List of channels by default
+        return json.dumps(["#emo"])
 
     def connect_server(self, result, request, nick):
         email = request.getSession().email
