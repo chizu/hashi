@@ -69,6 +69,7 @@ class APILogin(Resource):
             d.addErrback(existing_user)
             return d
         else:
+            print("Failed login: {0}".format(login))
             request.setResponseCode(403)
             request.finish()
             
