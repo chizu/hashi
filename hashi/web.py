@@ -75,9 +75,9 @@ class APILogin(Resource):
             
     def render_POST(self, request):
         """Handle logins from BrowserID"""
-        assertion = request.args["assertion"]
+        assertion = request.args["assertion"][0]
         # Use the host header so that it doesn't matter where this is running
-        audience = request.received_headers["host"]
+        audience = "http://" + request.received_headers["host"]
         data = urllib.urlencode({"assertion": assertion, "audience": audience})
         # Post to BrowserID
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
