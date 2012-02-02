@@ -31,6 +31,10 @@ class RemoteEventPublisher(object):
 
 class Client(irc.IRCClient):
     @property
+    def email(self):
+        return self.factory.email
+
+    @property
     def nickname(self):
         return self.factory.nickname
 
@@ -42,6 +46,17 @@ class Client(irc.IRCClient):
         self.channels = list()
         self.publish = RemoteEventPublisher(self.network, self.nickname)
         self.publish.event("signedOn", self.nickname)
+        def initial_join(l):
+            for channel in l:
+                self.join(channel[0], channel[1] or None)
+        # Join channels
+        join_sql = """SELECT name, key
+FROM channel_configs
+JOIN servers ON (servers.id = channel_configs.server_id)
+WHERE enabled = true AND user_email = %s AND servers.hostname = %s;
+"""
+        d = dbpool.runQuery(join_sql, (self.email, self.network))
+        d.addCallback(initial_join)
         
     def joined(self, channel):
         self.channels.append(channel)
@@ -58,7 +73,8 @@ class Client(irc.IRCClient):
 class ClientFactory(protocol.ClientFactory):
     protocol = Client
 
-    def __init__(self, network, nickname='hashi'):
+    def __init__(self, email, network, nickname='hashi'):
+        self.email = email
         self.network = network
         self.nickname = nickname
 
@@ -132,7 +148,7 @@ WHERE server_configs.enabled = true;
 
     def server_connect(self, email, hostname, port, ssl, nick):
         # We're reusing hostnames as network names for now
-        client_f = ClientFactory(hostname, nick)
+        client_f = ClientFactory(email, hostname, nick)
         if ssl:
             point = SSL4ClientEndpoint(reactor, hostname, port,
                                        self.ssl_context)
