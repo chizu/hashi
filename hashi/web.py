@@ -176,7 +176,14 @@ class IRCServer(Resource):
 
     def render_GET(self, request):
         # List of channels by default
-        return json.dumps(["#emo"])
+        email = request.getSession().email
+        def render_channels(l):
+            request.write(json.dumps(l))
+            request.finish()
+        chan_sql = 'SELECT name FROM channel_configs WHERE user_email = %s;'
+        d = dbpool.runQuery(chan_sql, (email,));
+        d.addCallback(render_channels)
+        return server.NOT_DONE_YET
 
     def connect_server(self, result, request, nick):
         email = request.getSession().email
