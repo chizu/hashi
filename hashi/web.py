@@ -234,7 +234,7 @@ class IRCChannel(Resource):
         return Resource.getChild(self, name, request)
 
     def render_POST(self, request):
-        request.irc_client.join(self.name)
+        # Join - unimplemented
         return ''
 
 
@@ -245,7 +245,19 @@ class IRCChannelMessages(Resource):
         self.name = name
 
     def render_GET(self, request):
-        return str(request.irc_client.history[self.name])
+        # Channel history
+        email = request.getSession().email
+        def render_messages(l):
+            request.write(json.dumps(l))
+            request.finish()
+        msg_sql = """SELECT source_identities.token, events.args
+FROM identities
+JOIN events on (events.target = identities.id)
+JOIN identities as source_identities on (events.source = source_identities.id)
+WHERE identities.token = %s order by events.id desc limit %s;"""
+        d = dbpool.runQuery(msg_sql, (self.name, 43));
+        d.addCallback(render_messages)
+        return server.NOT_DONE_YET
 
 
 def start():
