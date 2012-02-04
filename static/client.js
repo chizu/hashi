@@ -46,6 +46,22 @@ function serverControls(hostname_id) {
     return '<ul class="tabs channels-nav"><li class="active"><a href="#'+hostname_id+'-server">Server</a></li></ul><div class="pill-content"><div class="active" id="'+hostname_id+'-server"><input class="xlarge irc-input" name="'+hostname_id+'" size="30" type="text"/></div></div>';
 }
 
+function channelInput(options, event) {
+    event.preventDefault();
+    $.ajax({
+	type: 'POST',
+	url: options['url'],
+	data: {'privmsg':$(options['id']).val()},
+	dataType: 'json',
+	success: function() {
+	    alert("worked!");
+	},
+	error: function(res, status, xhr) {
+	    alert("channelInput failed: "+res);
+	}
+    });
+}
+
 function refreshChannel(hostname, channel, position) {
     var channel_url = '/api/networks/'+hostname+'/'+channel+'/messages';
     $.getJSON(channel_url, function (channel_messages) {
@@ -54,10 +70,13 @@ function refreshChannel(hostname, channel, position) {
 	$('#'+hostname_id).children('.pill-content')
 	    .append('<div id="'+channel_id+'"><div class="irc-body"></div></div>');
 	channel_messages.reverse();
+	var irc_body = $('#'+channel_id+' div.irc-body');
 	$.each(channel_messages, function(index, val) {
-	    $('#'+channel_id+' div.irc-body')
-		.append('<div class="row"><div class="span2 nick">'+val[0]+'</div><div class="span12 privmsg">'+val[1]+'</div></div>');
+	    irc_body.append('<div class="row"><div class="span2 nick">'+val[0]+'</div><div class="span12 privmsg">'+val[1]+'</div></div>');
 	});
+	irc_body.append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
+	var options = {'url':channel_url, 'id':channel_id+'-input'};
+	irc_body.children('form').submit(options, channelInput);
     });
 }
 
