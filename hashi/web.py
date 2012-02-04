@@ -2,6 +2,7 @@
 import json
 import urllib
 from urlparse import parse_qs
+from functools import wraps
 
 from psycopg2 import IntegrityError, errorcodes
 from txZMQ import ZmqEndpoint
@@ -15,6 +16,18 @@ from zope.interface import implements
 from connections import *
 e = ZmqEndpoint("connect", "tcp://127.0.0.1:9912")
 irc_client = ZmqPushConnection(zmqfactory, "hashi-web", e)
+
+
+def require_login(func):
+    @wraps(func)
+    def wrapped(self, request):
+        session = request.getSession()
+        if hasattr(session, 'email'):
+            return func(self, request, session)
+        else:
+            request.setResponseCode(401)
+            return json.dumps("must be logged in")
+    return wrapped
 
 
 class Hashioki(Resource):
@@ -41,9 +54,10 @@ class API(Resource):
 class APISession(Resource):
     isLeaf = True
 
-    def render_GET(self, request):
+    @require_login
+    def render_GET(self, request, session):
         """Return session uid."""
-        return json.dumps(request.getSession().uid)
+        return json.dumps(session.uid)
 
 
 class APILogin(Resource):
@@ -122,7 +136,8 @@ class IRCNetwork(Resource):
             request.write(json.dumps(None))
         request.finish()
 
-    def render_GET(self, request):
+    @require_login
+    def render_GET(self, request, session):
         list_sql = """SELECT user_email, hostname, port, ssl, nick
 FROM servers LEFT JOIN server_configs ON (servers.id = server_configs.server_id);"""
         d = dbpool.runQuery(list_sql)
@@ -174,14 +189,14 @@ class IRCServer(Resource):
         else:
             return IRCChannel(name)
 
-    def render_GET(self, request):
-        # List of channels by default
-        email = request.getSession().email
+    @require_login
+    def render_GET(self, request, session):
+        """List of channels by default"""
         def render_channels(l):
             request.write(json.dumps(l))
             request.finish()
         chan_sql = 'SELECT name FROM channel_configs WHERE user_email = %s;'
-        d = dbpool.runQuery(chan_sql, (email,));
+        d = dbpool.runQuery(chan_sql, (session.email,));
         d.addCallback(render_channels)
         return server.NOT_DONE_YET
 
@@ -244,9 +259,9 @@ class IRCChannelMessages(Resource):
         Resource.__init__(self)
         self.name = name
 
-    def render_GET(self, request):
-        # Channel history
-        email = request.getSession().email
+    @require_login
+    def render_GET(self, request, session):
+        """Channel history"""
         def render_messages(l):
             request.write(json.dumps(l))
             request.finish()
