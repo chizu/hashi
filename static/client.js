@@ -43,7 +43,7 @@ function hostnameId(hostname) {
 }
 
 function serverControls(hostname_id) {
-    return '<ul class="tabs channels-nav"><li class="active"><a href="#'+hostname_id+'-server">Server</a></li></ul><div class="pill-content"><div class="active" id="'+hostname_id+'-server"><input class="xlarge" name="'+hostname_id+'" size="30" type="text"/></div></div>';
+    return '<ul class="tabs channels-nav"><li class="active"><a href="#'+hostname_id+'-server">Server</a></li></ul><div class="pill-content"><div class="active" id="'+hostname_id+'-server"><input class="xlarge irc-input" name="'+hostname_id+'" size="30" type="text"/></div></div>';
 }
 
 function refreshChannel(hostname, channel, position) {
@@ -52,11 +52,11 @@ function refreshChannel(hostname, channel, position) {
 	var hostname_id = hostnameId(hostname);
 	var channel_id = hostname_id + '-' + position;
 	$('#'+hostname_id).children('.pill-content')
-	    .append('<div id="'+channel_id+'"><ul></ul></div>');
+	    .append('<div id="'+channel_id+'"><div class="irc-body"></div></div>');
 	channel_messages.reverse();
 	$.each(channel_messages, function(index, val) {
-	    $('#'+channel_id+' ul')
-		.append('<li><span style="padding-right: 2em">'+val[0]+'</span><span>'+val[1]+'</span></li>');
+	    $('#'+channel_id+' div.irc-body')
+		.append('<div class="row"><div class="span2 nick">'+val[0]+'</div><div class="span12 privmsg">'+val[1]+'</div></div>');
 	});
     });
 }
