@@ -273,7 +273,7 @@ WHERE identities.token = %s order by events.id desc limit %s;"""
         if "count" in request.args:
             count = max(0, min(int(request.args["count"][0]), 1000))
         else:
-            count = 40
+            count = 30
         d = dbpool.runQuery(msg_sql, (self.name, count));
         d.addCallback(render_messages)
         return server.NOT_DONE_YET
