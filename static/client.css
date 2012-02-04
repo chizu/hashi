@@ -50,3 +50,12 @@ body {
 	font-size: 24px;
 	text-align: center;
 }
+
+.irc-body {
+    font-family: 'Ubuntu Mono', sans-serif;
+    font-size: 1.2em;
+}
+
+.irc-body .row {
+    padding-bottom: 0.2em;
+}
