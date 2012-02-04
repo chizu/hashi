@@ -285,6 +285,11 @@ WHERE identities.token = %s order by events.id desc limit %s;"""
         d.addCallback(render_messages)
         return server.NOT_DONE_YET
 
+    @require_login
+    def render_POST(self, request, session):
+        print(request.args['privmsg'])
+        return json.dumps(True);
+
 
 def start():
     root = Hashioki()
