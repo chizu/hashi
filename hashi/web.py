@@ -11,6 +11,7 @@ from twisted.web import server
 from twisted.web.resource import Resource
 from twisted.web.static import File
 from twisted.web.client import getPage
+from twisted.web.util import redirectTo
 from zope.interface import implements
 
 from connections import *
@@ -35,6 +36,9 @@ class Hashioki(Resource):
         if name == '':
             return self
         return Resource.getChild(self, name, request)
+
+    def render_GET(self, request):
+        return redirectTo('static', request)
 
 
 class API(Resource):
