@@ -108,12 +108,9 @@ class APILogin(Resource):
 class APIWhoAmI(Resource):
     isLeaf = True
     
-    def render_GET(self, request):
-        session = request.getSession()
-        if hasattr(session, "email"):
-            return json.dumps(session.email)
-        else:
-            return json.dumps(None)
+    @require_login
+    def render_GET(self, request, session):
+        return json.dumps(session.email)
 
 
 class APILogout(Resource):
