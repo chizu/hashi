@@ -95,6 +95,9 @@ class HashiController(ZmqPullConnection):
         hostname, port, ssl = rows[0]
         self.hashi.server_connect(user, hostname, port, ssl, nick)
 
+    def joinCallback(self, rows, server):
+        server.join(*rows[0])
+
     def messageReceived(self, message):
         """Protocol is this:
 
@@ -113,14 +116,21 @@ class HashiController(ZmqPullConnection):
             subject = subject[server]
         # Otherwise, the iterable subject means for all servers
         if command == 'connect':
-            # Arguments are hostname, nick
+            # Arguments are 'hostname nick'
             start_sql = """SELECT hostname, port, ssl
 FROM servers WHERE hostname = %s;"""
             d = dbpool.runQuery(start_sql, (hostname,))
             d.addCallback(self.connectCallback, user, nick)
         elif command == 'join':
-            pass
-
+            # Arguments are 'channel [key]'
+            subject.join(*command_args[:2])
+#            join_sql = """SELECT name, key
+#FROM channels_config
+#JOIN servers ON (servers.id = channels_config.server_id)
+#WHERE enabled = true AND user_email = %s
+#AND servers.hostname = %s AND name;"""
+#            d = dbpool.runQuery(join_sql, (user, hostname))
+#            d.addCallback(self.joinCallback, subject)
 
 class Hashi(object):
     def __init__(self):

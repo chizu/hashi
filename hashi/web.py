@@ -214,9 +214,10 @@ class IRCServer(Resource):
         request.write(json.dumps(True))
         request.finish()
 
-    def render_POST(self, request):
+    @require_login
+    def render_POST(self, request, session):
         print("Requested connection to {0}".format(self.name))
-        email = request.getSession().email
+        email = session.email
         nick = request.args["nick"][0]
         enabled = (request.args["enabled"][0] == "true")
         # Upsert is fancy...
@@ -252,9 +253,14 @@ class IRCChannel(Resource):
             return IRCChannelMessages(self.name)
         return Resource.getChild(self, name, request)
 
-    def render_POST(self, request):
-        # Join - unimplemented
-        return ''
+    @require_login
+    def render_POST(self, request, session):
+        """Join a channel"""
+        client_cmd = [session.email, "global", "join", self.name]
+        if "key" in request.args:
+            client_cmd.append(request.args["key"][0])
+        irc_client.send(client_cmd)
+        return json.dumps(True)
 
 
 class IRCChannelMessages(Resource):
