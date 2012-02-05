@@ -291,8 +291,13 @@ WHERE identities.token = %s order by events.id desc limit %s;"""
     @require_login
     def render_POST(self, request, session):
         #request.responseHeaders.addRawHeader("Content-Type", "application/json")
-        message = json.loads(request.content.read())
-        print(message)
+        message_json = json.loads(request.content.read())
+        client_cmd = [session.email.encode('utf-8'),
+                      request.prepath[-3], 'msg',
+                      self.name,
+                      message_json['privmsg'].encode('utf-8')]
+        print(client_cmd)
+        irc_client.send(client_cmd)
         return json.dumps(True)
 
 

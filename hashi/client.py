@@ -104,13 +104,14 @@ class HashiController(ZmqPullConnection):
         Servers control: {user} global {command} {arguments...}
         Connection control: {user} {server} {command} {arguments...}
         """
+        print("Controller message: {0}".format(message))
         user, server = message[:2]
         command = message[2]
         if len(message) >= 3:
             command_args = message[3:]
         else:
             command_args = None
-        subject = self.hashi.clients[user]
+        subject = self.hashi[user]
         # If there's a server specified, pick that server here
         if server != "global":
             subject = subject[server]
@@ -124,19 +125,17 @@ FROM servers WHERE hostname = %s;"""
         elif command == 'join':
             # Arguments are 'channel [key]'
             subject.join(*command_args[:2])
-#            join_sql = """SELECT name, key
-#FROM channels_config
-#JOIN servers ON (servers.id = channels_config.server_id)
-#WHERE enabled = true AND user_email = %s
-#AND servers.hostname = %s AND name;"""
-#            d = dbpool.runQuery(join_sql, (user, hostname))
-#            d.addCallback(self.joinCallback, subject)
+        elif command == 'msg':
+            # Arguments are 'target message ...'
+            target = command_args[0]
+            subject.msg(target, command_args[1], 500 - len(target))
+
 
 class Hashi(object):
     def __init__(self):
         # Dict of all clients indexed by email
         self.clients = defaultdict(dict)
-        e = ZmqEndpoint("connect", "tcp://127.0.0.1:9911")
+        e = ZmqEndpoint("bind", "tcp://127.0.0.1:9912")
         self.socket = HashiController(zmqfactory, e, self.clients)
         self.ssl_context = ClientContextFactory()
 

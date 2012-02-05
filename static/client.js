@@ -56,7 +56,7 @@ function channelInput(event) {
 	dataType: 'json',
 	contentType: 'application/json',
 	success: function () {
-	    alert("worked!");
+	    $(event.data.id).val("");
 	}
     });
 }
