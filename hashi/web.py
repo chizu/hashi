@@ -290,8 +290,10 @@ WHERE identities.token = %s order by events.id desc limit %s;"""
 
     @require_login
     def render_POST(self, request, session):
-        print(request.args['privmsg'])
-        return json.dumps(True);
+        #request.responseHeaders.addRawHeader("Content-Type", "application/json")
+        message = json.loads(request.content.read())
+        print(message)
+        return json.dumps(True)
 
 
 def start():

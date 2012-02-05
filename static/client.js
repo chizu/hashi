@@ -46,18 +46,17 @@ function serverControls(hostname_id) {
     return '<ul class="tabs channels-nav"><li class="active"><a href="#'+hostname_id+'-server">Server</a></li></ul><div class="pill-content"><div class="active" id="'+hostname_id+'-server"><input class="xlarge irc-input" name="'+hostname_id+'" size="30" type="text"/></div></div>';
 }
 
-function channelInput(options, event) {
+function channelInput(event) {
     event.preventDefault();
     $.ajax({
 	type: 'POST',
-	url: options['url'],
-	data: {'privmsg':$(options['id']).val()},
+	url: event.data.url,
+	// Fix this - use real JSON encoding (why does jquery not do that?)
+	data: '{"privmsg":"'+$(event.data.id).val()+'"}',
 	dataType: 'json',
-	success: function() {
+	contentType: 'application/json',
+	success: function () {
 	    alert("worked!");
-	},
-	error: function(res, status, xhr) {
-	    alert("channelInput failed: "+res);
 	}
     });
 }
@@ -75,7 +74,7 @@ function refreshChannel(hostname, channel, position) {
 	    irc_body.append('<div class="row"><div class="span2 nick">'+val[0]+'</div><div class="span12 privmsg">'+val[1]+'</div></div>');
 	});
 	irc_body.append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
-	var options = {'url':channel_url, 'id':channel_id+'-input'};
+	var options = {url:channel_url, id:'#'+channel_id+'-input'};
 	irc_body.children('form').submit(options, channelInput);
     });
 }
