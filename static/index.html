@@ -2,7 +2,7 @@
 <html>
   <head>
     <title>Hashi IRC</title>
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script type="text/javascript" src="http://twitter.github.com/bootstrap/1.4.0/bootstrap-dropdown.js"></script>
     <script type="text/javascript" src="http://twitter.github.com/bootstrap/1.4.0/bootstrap-modal.js"></script>
     <script type="text/javascript" src="http://twitter.github.com/bootstrap/1.4.0/bootstrap-tabs.js"></script>
@@ -45,16 +45,18 @@
 	      <a class="btn primary pull-right" data-controls-modal="new-server" data-backdrop="static" >Add Server</a>
 	    </h1>
 	  </div>
-	  <table id="server-list" class="zebra-striped">
-	    <thead>
-	      <th>Enabled</th>
-	      <th>Hostname</th>
-	      <th>Port</th>
-	      <th>SSL</th>
-	      <th>Nick</th>
-	    </thead>
-	    <tbody></tbody>
-	  </table>
+	  <form>
+	    <table id="server-list" class="zebra-striped">
+	      <thead>
+		<th>Enabled</th>
+		<th>Hostname</th>
+		<th>Port</th>
+		<th>SSL</th>
+		<th>Nick</th>
+	      </thead>
+	      <tbody></tbody>
+	    </table>
+	  </form>
 	  <form id="new-server" class="modal hide fade">
 	    <div class="modal-header">
 	      <a href="#" class="close">&times;</a>
