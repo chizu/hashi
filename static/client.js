@@ -46,6 +46,20 @@ function serverControls(hostname_id) {
     return '<ul class="tabs channels-nav"><li class="active"><a href="#'+hostname_id+'-server">Server</a></li></ul><div class="pill-content"><div class="active" id="'+hostname_id+'-server"><input class="xlarge irc-input" name="'+hostname_id+'" size="30" type="text"/></div></div>';
 }
 
+function startPoll() {
+    // Poll for events forever!
+    (function poll(){
+	$.ajax({ url: "/api/poll", 
+		 success: function(data){
+		     ;
+		 }, 
+		 dataType: "json",
+		 complete: poll,
+		 timeout: 5000
+	       });
+    })();
+}
+
 function channelInput(event) {
     event.preventDefault();
     $.ajax({
@@ -66,16 +80,25 @@ function refreshChannel(hostname, channel, position) {
     $.getJSON(channel_url, function (channel_messages) {
 	var hostname_id = hostnameId(hostname);
 	var channel_id = hostname_id + '-' + position;
-	$('#'+hostname_id).children('.pill-content')
-	    .append('<div id="'+channel_id+'"><div class="irc-body"></div></div>');
+	var options = {url:channel_url, id:'#'+channel_id+'-input'};
+
 	channel_messages.reverse();
+
+	// Create the pill content divs if needed (initial load)
+	if (!$('#'+hostname_id+' .pill-content > #'+channel_id).length) {
+	    $('#'+hostname_id).children('.pill-content')
+		.append('<div id="'+channel_id+'"><div class="irc-body"></div></div>');
+	    $('#'+channel_id).append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
+	    $('#'+channel_id).children('form').submit(options, channelInput);
+	}
+
 	var irc_body = $('#'+channel_id+' div.irc-body');
+
+	// Stick new message rows in the div
 	$.each(channel_messages, function(index, val) {
 	    irc_body.append('<div class="row"><div class="span2 nick">'+val[0]+'</div><div class="span12 privmsg">'+val[1]+'</div></div>');
 	});
-	irc_body.append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
-	var options = {url:channel_url, id:'#'+channel_id+'-input'};
-	irc_body.children('form').submit(options, channelInput);
+
     });
 }
 
