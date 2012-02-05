@@ -66,6 +66,11 @@ WHERE enabled = true AND user_email = %s AND servers.hostname = %s;
         self.channels.remove(channel)
         self.publish.event("left", channel)
 
+    def msg(self, target, msg, length=None):
+        ret = irc.IRCClient.msg(self, target, msg, length)
+        self.publish.event("privmsg", self.nickname, target, msg)
+        return ret
+
     def privmsg(self, user, channel, msg):
         self.publish.event("privmsg", user, channel, msg)
 
