@@ -61,5 +61,6 @@ body {
 }
 
 .channel-input {
+    margin-top: 0.5em;
     width: 100%;
 }
