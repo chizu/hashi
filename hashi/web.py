@@ -55,6 +55,14 @@ class API(Resource):
         return """<html><p>Should document the API here!</p></html>"""
 
 
+class APIPoller(Resource):
+    isLeaf = True
+
+    @require_login
+    def render_GET(self, request, session):
+        # Just always leave this request open for now
+        return server.NOT_DONE_YET
+
 class APISession(Resource):
     isLeaf = True
 
@@ -307,6 +315,7 @@ def start():
 
     rest_api = API()
     root.putChild('api', rest_api)
+    rest_api.putChild('poll', APIPoller())
     rest_api.putChild('session', APISession())
     rest_api.putChild('login', APILogin())
     rest_api.putChild('whoami', APIWhoAmI())
