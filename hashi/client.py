@@ -12,13 +12,16 @@ from twisted.words.protocols import irc
 
 from connections import *
 
+e = ZmqEndpoint("bind", "tcp://127.0.0.1:9913")
+event_publisher = ZmqPubConnection(zmqfactory, e)
 
 class RemoteEventPublisher(object):
-    def __init__(self, network, identity):
+    def __init__(self, network, identity, email):
         self.network = network
         self.identity = identity
+        self.email = email
         e = ZmqEndpoint("connect", "tcp://127.0.0.1:9911")
-        self.socket = ZmqPushConnection(zmqfactory, identity, e)
+        self.push = ZmqPushConnection(zmqfactory, identity, e)
 
     def event(self, kind, *args):
         send = [self.network, self.identity, kind]
@@ -26,7 +29,8 @@ class RemoteEventPublisher(object):
         for i, value in enumerate(send):
             if isinstance(value, unicode):
                 send[i] = value.encode("utf-8")
-        self.socket.send(send)
+        self.push.send(send)
+        event_publisher.publish(send, self.email)
 
 
 class Client(irc.IRCClient):
@@ -44,7 +48,7 @@ class Client(irc.IRCClient):
 
     def signedOn(self):
         self.channels = list()
-        self.publish = RemoteEventPublisher(self.network, self.nickname)
+        self.publish = RemoteEventPublisher(self.network, self.nickname, self.email)
         self.publish.event("signedOn", self.nickname)
         def initial_join(l):
             for channel in l:

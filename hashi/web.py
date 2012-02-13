@@ -15,8 +15,8 @@ from twisted.web.util import redirectTo
 from zope.interface import implements
 
 from connections import *
-e = ZmqEndpoint("connect", "tcp://127.0.0.1:9912")
-irc_client = ZmqPushConnection(zmqfactory, "hashi-web", e)
+irc_end = ZmqEndpoint("connect", "tcp://127.0.0.1:9912")
+irc_client = ZmqPushConnection(zmqfactory, "hashi-web", irc_end)
 
 
 def require_login(func):
@@ -55,13 +55,26 @@ class API(Resource):
         return """<html><p>Should document the API here!</p></html>"""
 
 
+class EventController(ZmqSubConnection):
+    def __init__(self, request):
+        self.request = request
+        endpoint = ZmqEndpoint("connect", "tcp://127.0.0.1:9913")
+        super(EventController, self).__init__(zmqfactory, endpoint)
+
+    def gotMessage(self, message, tag):
+        self.request.write(json.dumps(message))
+        self.request.finish()
+
+
 class APIPoller(Resource):
     isLeaf = True
 
     @require_login
     def render_GET(self, request, session):
-        # Just always leave this request open for now
+        ec = EventController(request)
+        ec.subscribe(session.email.encode('utf-8'))
         return server.NOT_DONE_YET
+
 
 class APISession(Resource):
     isLeaf = True
