@@ -1,3 +1,8 @@
+// Wraped around any id string with possible special characters
+function eid(myid) { 
+    return '#' + myid.replace(/([#:|.])/g, '\\$1');
+}
+
 function setSessions(val) {
     if (navigator.id) {
 	navigator.id.sessions = val ? val : [ ];
@@ -55,13 +60,17 @@ function startPoll() {
 		     console.log(data);
 		     //["irc.freenode.org", "hashi", "privmsg", "hashi", "##emo", "more testing"]
 		     newChannelMessages([[data[3].split('!')[0], data[5]],], 
-					data[0], data[4], 0);
+					data[0], data[4]);
 		 }, 
 		 dataType: "json",
 		 complete: poll,
 		 timeout: 5000
 	       });
     })();
+}
+
+function channelURL(channel) {
+    return '/api/networks/'+hostname+'/'+encodeURIComponent(channel)+'/messages';
 }
 
 function channelInput(event) {
@@ -79,35 +88,38 @@ function channelInput(event) {
     });
 }
 
-function newChannelMessages(channel_messages, hostname, channel, position) {
+function newChannelMessages(channel_messages, hostname, channel) {
     var hostname_id = hostnameId(hostname);
-    var channel_url = '/api/networks/'+hostname+'/'+channel+'/messages';    
-    var channel_id = hostname_id + '-' + position;
-    var options = {url:channel_url, id:'#'+channel_id+'-input'};
+    var channel_id = hostname_id + '-' + channel;
+    // Options passed with the form submit for channel input
+    var options = {url:channelURL(channel),
+		   id:eid(channel_id)+'-input'};
 
+    console.log(hostname_id);
+    console.log(channel_id);
+    console.log(eid(channel_id));
     channel_messages.reverse();
     
     // Create the pill content divs if needed (initial load)
-    if (!$('#'+hostname_id+' .pill-content > #'+channel_id).length) {
+    if (!$('#'+hostname_id+' .pill-content > '+eid(channel_id)).length) {
 	$('#'+hostname_id).children('.pill-content')
 	    .append('<div id="'+channel_id+'"><div class="irc-body"></div></div>');
-	$('#'+channel_id).append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
-	$('#'+channel_id).children('form').submit(options, channelInput);
+	$(eid(channel_id)).append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
+	$(eid(channel_id)).children('form').submit(options, channelInput);
     }
     
-    var irc_body = $('#'+channel_id+' div.irc-body');
-    
+    var irc_body = $(eid(channel_id)+' div.irc-body');
+
     // Stick new message rows in the div
     $.each(channel_messages, function(index, val) {
 	irc_body.append('<div class="row"><div class="span2 nick">'+val[0]+'</div><div class="span12 privmsg">'+val[1]+'</div></div>');
-    });   
+    });
 }
 
 
-function refreshChannel(hostname, channel, position) {
-    var url = '/api/networks/'+hostname+'/'+channel+'/messages';
-    $.getJSON(url, function (channel_messages) {
-	newChannelMessages(channel_messages, hostname, channel, position);
+function refreshChannel(hostname, channel) {
+    $.getJSON(channelURL(channel), function (channel_messages) {
+	newChannelMessages(channel_messages, hostname, channel);
     });
 }
 
@@ -118,10 +130,9 @@ function listChannels(hostname) {
     $.getJSON(url, function (channel_list) {
 	$.each(channel_list, function(index, val) {
 	    // Fixme: Will break with multiple servers
-	    var chan = encodeURIComponent(val);
 	    $('.channels-nav')
-		.append('<li><a href="#'+hostname_id+'-'+index+'">'+val+'</a></li>');
-	    refreshChannel(hostname, chan, index);
+		.append('<li><a href="#'+hostname_id+'-'+val+'">'+val+'</a></li>');
+	    refreshChannel(hostname, val);
 	});
 	$('.tabs').tabs();
     });
