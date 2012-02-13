@@ -21,7 +21,6 @@ class RemoteEventPublisher(object):
         self.identity = identity
         self.email = email
         e = ZmqEndpoint("connect", "tcp://127.0.0.1:9911")
-        self.push = ZmqPushConnection(zmqfactory, identity, e)
 
     def event(self, kind, *args):
         send = [self.network, self.identity, kind]
@@ -29,7 +28,6 @@ class RemoteEventPublisher(object):
         for i, value in enumerate(send):
             if isinstance(value, unicode):
                 send[i] = value.encode("utf-8")
-        self.push.send(send)
         event_publisher.publish(send, self.email)
 
 

@@ -105,8 +105,9 @@ VALUES (%s, %s, %s, %s);"""
 class RemoteEventReceiver(object):
     def __init__(self):
         context = zmq.Context.instance()
-        self.socket = context.socket(zmq.PULL)
-        self.socket.bind("tcp://127.0.0.1:9911")
+        self.socket = context.socket(zmq.SUB)
+        self.socket.connect("tcp://127.0.0.1:9913")
+        self.socket.setsockopt(zmq.SUBSCRIBE, "")
         self.queries = context.socket(zmq.REP)
         self.queries.bind("tcp://127.0.0.1:9922")
         self.poller = zmq.Poller()
