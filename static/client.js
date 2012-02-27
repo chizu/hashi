@@ -159,7 +159,7 @@ function listServers() {
 	    }
 	    cols[1] = '<td>'+val[1]+'</td>';
 	    cols[2] = '<td>'+val[2]+'</td>';
-	    // SSL heart or skull
+	    // SSL configuration
 	    if (val[3]) {
 		// Remove disabled when this is implemented
 		cols[3] = '<td><a class="btn btn-small btn-success disabled"><i class="icon-lock icon-white" /> Enabled</a></td>';
