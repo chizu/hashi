@@ -120,7 +120,7 @@ class RemoteEventReceiver(object):
 
             # New history
             if self.socket in socks and socks[self.socket] == zmq.POLLIN:
-                event = [unicode(x) for x in self.socket.recv_multipart()]
+                event = self.socket.recv_multipart()
                 email, network, identity, kind = event[:4]
                 args = event[4:]
                 history = History(network)
