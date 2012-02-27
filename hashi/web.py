@@ -56,23 +56,43 @@ class API(Resource):
 
 
 class EventController(ZmqSubConnection):
-    def __init__(self, request):
-        self.request = request
+    def __init__(self, email):
+        self.requests = list()
+        self.email = email
         endpoint = ZmqEndpoint("connect", "tcp://127.0.0.1:9913")
         super(EventController, self).__init__(zmqfactory, endpoint)
+        self.subscribe(self.email)
+
+    def listen(self, request):
+        self.requests.append(request)
+
+    def dead(self, err, request):
+        self.requests.remove(request)
 
     def gotMessage(self, message, tag):
-        self.request.write(json.dumps(message))
-        self.request.finish()
+        try:
+            for req in self.requests:
+                req.write(json.dumps(message))
+                req.finish()
+        finally:
+            # Always empty the waiting requests
+            self.requests = list()
 
 
 class APIPoller(Resource):
     isLeaf = True
+    controllers = dict()
 
     @require_login
     def render_GET(self, request, session):
-        ec = EventController(request)
-        ec.subscribe(session.email.encode('utf-8'))
+        email = session.email
+        if email not in APIPoller.controllers:
+            utf_email = email.encode('utf-8')
+            APIPoller.controllers[email] = EventController(utf_email)
+        ec = APIPoller.controllers[email]
+        ec.listen(request)
+        d = request.notifyFinish()
+        d.addErrback(ec.dead, request)
         return server.NOT_DONE_YET
 
 
