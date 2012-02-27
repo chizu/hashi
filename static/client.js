@@ -45,7 +45,7 @@ function hostnameId(hostname) {
 }
 
 function serverControls(hostname_id) {
-    return '<ul class="nav nav-tabs channels-nav"><li class="active"><a href="#'+hostname_id+'-server" data-toggle="tab">Server</a></li></ul><div class="tab-content"><div class="tab-pane active" id="'+hostname_id+'-server"><input class="xlarge irc-input" name="'+hostname_id+'" size="30" type="text"/></div></div>';
+    return '<div class="subnav subnav-fixed"><ul class="nav nav-pills channels-nav"></ul></div><div class="tab-content"></div>';
 }
 
 function startPoll() {
