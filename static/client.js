@@ -95,16 +95,16 @@ function newChannelMessages(channel_messages, hostname, channel) {
     // Create the pill content divs if needed (initial load)
     if (!$('#'+hostname_id+' .tab-content > '+eid(channel_id)).length) {
 	$('#'+hostname_id).children('.tab-content')
-	    .append('<div id="'+channel_id+'" class="tab-pane"><div class="irc-body"></div></div>');
+	    .append('<div id="'+channel_id+'" class="tab-pane"><table class="irc-body"></table></div>');
 	$(eid(channel_id)).append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
 	$(eid(channel_id)).children('form').submit(options, channelInput);
     }
     
-    var irc_body = $(eid(channel_id)+' div.irc-body');
+    var irc_body = $(eid(channel_id)+' table.irc-body');
 
     // Stick new message rows in the div
     $.each(channel_messages, function(index, val) {
-	irc_body.append('<div class="row-fluid"><div class="nick span2">&lt; '+val[0]+'&gt;</div><div class="span10 privmsg">'+val[1]+'</div></div>');
+	irc_body.append('<tr><td class="nick">&lt;&nbsp;'+val[0]+'&gt;</td><td class="privmsg">'+val[1]+'</td></tr>');
     });
 }
 

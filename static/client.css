@@ -150,8 +150,21 @@ body {
     font-size: 1.2em;
 }
 
-.irc-body .row {
+.irc-body tr {
     padding-bottom: 0.2em;
+}
+
+.irc-body tr:nth-child(odd) {
+    background-color: #eeeeee;
+}
+
+.irc-body td.nick {
+    padding-right: 1em;
+    vertical-align: top;
+}
+
+.irc-body td.privmsg {
+    word-break: break-all;
 }
 
 .channel-input {
