@@ -64,7 +64,7 @@ function startPoll() {
     })();
 }
 
-function channelURL(channel) {
+function channelURL(hostname, channel) {
     return '/api/networks/'+hostname+'/'+encodeURIComponent(channel)+'/messages';
 }
 
@@ -87,7 +87,7 @@ function newChannelMessages(channel_messages, hostname, channel) {
     var hostname_id = hostnameId(hostname);
     var channel_id = hostname_id + '-' + channel;
     // Options passed with the form submit for channel input
-    var options = {url:channelURL(channel),
+    var options = {url:channelURL(hostname, channel),
 		   id:eid(channel_id)+'-input'};
 
     channel_messages.reverse();
@@ -110,7 +110,7 @@ function newChannelMessages(channel_messages, hostname, channel) {
 
 
 function refreshChannel(hostname, channel) {
-    $.getJSON(channelURL(channel), function (channel_messages) {
+    $.getJSON(channelURL(hostname, channel), function (channel_messages) {
 	newChannelMessages(channel_messages, hostname, channel);
     });
 }
