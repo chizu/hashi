@@ -12,14 +12,10 @@ function setSessions(val) {
 function loggedIn(email) {
     setSessions([ { email: email } ]);
     $('#logout').bind('click', logout);
-    $('#new-server').submit(addServer);
-    $('#new-server').modal({
-	keyboard: true,
-	backdrop: true
-    });
+    //$('#new-server').submit(addServer);
     listServers();
-    $('#usermenu').dropdown();
-    $('#usermenu .dropdown-toggle').html(email);
+    $('#usermenu .dropdown-toggle').html(email + '<b class="caret" />');
+    $('.dropdown-toggle').dropdown();
     $('.logged-out').hide();
     $('.logged-in').show();
     startPoll();
@@ -49,7 +45,7 @@ function hostnameId(hostname) {
 }
 
 function serverControls(hostname_id) {
-    return '<ul class="tabs channels-nav"><li class="active"><a href="#'+hostname_id+'-server">Server</a></li></ul><div class="pill-content"><div class="active" id="'+hostname_id+'-server"><input class="xlarge irc-input" name="'+hostname_id+'" size="30" type="text"/></div></div>';
+    return '<ul class="nav nav-tabs channels-nav"><li class="active"><a href="#'+hostname_id+'-server" data-toggle="tab">Server</a></li></ul><div class="tab-content"><div class="tab-pane active" id="'+hostname_id+'-server"><input class="xlarge irc-input" name="'+hostname_id+'" size="30" type="text"/></div></div>';
 }
 
 function startPoll() {
@@ -57,7 +53,6 @@ function startPoll() {
     (function poll(){
 	$.ajax({ url: "/api/poll", 
 		 success: function(data){
-		     console.log(data);
 		     //["irc.freenode.org", "hashi", "privmsg", "hashi", "##emo", "more testing"]
 		     newChannelMessages([[data[3].split('!')[0], data[5]],], 
 					data[0], data[4]);
@@ -95,15 +90,12 @@ function newChannelMessages(channel_messages, hostname, channel) {
     var options = {url:channelURL(channel),
 		   id:eid(channel_id)+'-input'};
 
-    console.log(hostname_id);
-    console.log(channel_id);
-    console.log(eid(channel_id));
     channel_messages.reverse();
     
     // Create the pill content divs if needed (initial load)
-    if (!$('#'+hostname_id+' .pill-content > '+eid(channel_id)).length) {
-	$('#'+hostname_id).children('.pill-content')
-	    .append('<div id="'+channel_id+'"><div class="irc-body"></div></div>');
+    if (!$('#'+hostname_id+' .tab-content > '+eid(channel_id)).length) {
+	$('#'+hostname_id).children('.tab-content')
+	    .append('<div id="'+channel_id+'" class="tab-pane"><div class="irc-body"></div></div>');
 	$(eid(channel_id)).append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
 	$(eid(channel_id)).children('form').submit(options, channelInput);
     }
@@ -112,7 +104,7 @@ function newChannelMessages(channel_messages, hostname, channel) {
 
     // Stick new message rows in the div
     $.each(channel_messages, function(index, val) {
-	irc_body.append('<div class="row"><div class="span2 nick">'+val[0]+'</div><div class="span12 privmsg">'+val[1]+'</div></div>');
+	irc_body.append('<div class="row-fluid"><div class="nick span2">&lt; '+val[0]+'&gt;</div><div class="span10 privmsg">'+val[1]+'</div></div>');
     });
 }
 
@@ -131,10 +123,9 @@ function listChannels(hostname) {
 	$.each(channel_list, function(index, val) {
 	    // Fixme: Will break with multiple servers
 	    $('.channels-nav')
-		.append('<li><a href="#'+hostname_id+'-'+val+'">'+val+'</a></li>');
+		.append('<li><a href="#'+hostname_id+'-'+val+'" data-toggle="tab">'+val+'</a></li>');
 	    refreshChannel(hostname, val);
 	});
-	$('.tabs').tabs();
     });
 }
 
@@ -150,7 +141,7 @@ function addServerTab(hostname) {
     var hostname_id = hostnameId(hostname);
     $('#servers-nav').append('<li><a href="#'+hostname_id+'">'+hostname+'</a></li>');
     $('#servers-nav a').click(switchServerTab);
-    $('#servers').append('<div class="content" id="'+hostname_id+'"></div>');
+    $('#servers').append('<div class="tab-pane content" id="'+hostname_id+'"></div>');
     listChannels(hostname);
 }
 
@@ -171,10 +162,10 @@ function listServers() {
 	    // SSL heart or skull
 	    if (val[3]) {
 		// Remove disabled when this is implemented
-		cols[3] = '<td><span class="ssl btn success small disabled">\u2665</span></td>';
+		cols[3] = '<td><a class="btn btn-small btn-success disabled"><i class="icon-lock icon-white" /> Enabled</a></td>';
 	    }
 	    else {
-		cols[3] = '<td><span class="ssl btn danger small disabled">\u2620</td>';
+		cols[3] = '<td><a class="btn btn-small btn-danger disabled"><i class="icon-ban-circle icon-white" /> Disabled</a></td>';
 	    }
 	    // Nick configured yet?
 	    if (val[4]) {
@@ -203,7 +194,7 @@ function addServer() {
 	data: $(this).serialize(),
 	dataType: 'json',
 	success: function() {
-	    $('#new-server').modal('hide');
+	    //$('#new-server').modal('hide');
 	    // Connect to a new server by default
 	    serverSettings($('#hostname').val(), true, $('#nick').val());
 	},
