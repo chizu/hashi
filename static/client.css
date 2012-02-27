@@ -165,6 +165,7 @@ body {
 
 .irc-body td.privmsg {
     word-break: break-all;
+    white-space: pre-wrap;
 }
 
 .channel-input {
