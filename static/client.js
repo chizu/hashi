@@ -11,6 +11,7 @@ function setSessions(val) {
 
 function loggedIn(email) {
     setSessions([ { email: email } ]);
+    $('#new-server').modal('hide');
     $('#logout').bind('click', logout);
     //$('#new-server').submit(addServer);
     listServers();
@@ -44,8 +45,11 @@ function hostnameId(hostname) {
     return hostname.replace(/\./g,'-');
 }
 
-function serverControls(hostname_id) {
-    return '<div class="subnav subnav-fixed"><ul class="nav nav-pills channels-nav"></ul></div><div class="tab-content"></div>';
+function serverControls(hostname) {
+    hostname_id = hostnameId(hostname);
+    modal_id = hostname_id + '-channel-join';
+    modal_url = '/api/networks/'+hostname;
+    return '<div class="subnav subnav-fixed"><ul class="nav nav-pills channels-nav"><li><a class="btn-primary" data-toggle="modal" href="#'+modal_id+'"><i class="icon-plus icon-white"/></a></li></ul></div><div class="tab-content"></div><div id="'+modal_id+'" class="modal fade hide"><div class="modal-header">Join a channel!<a class="close" data-dismiss="modal"><i class="icon-remove" /></a></div><div class="modal-body"><form class="form-inline"><input type="text" class="input channel-name" placeholder="Channel" /> <input type="text" class="input channel-key" placeholder="Key" /></form></div><div class="modal-footer"><a href="'+modal_url+'" class="btn btn-primary">Join</a></div></div>';
 }
 
 function startPoll() {
@@ -64,8 +68,12 @@ function startPoll() {
     })();
 }
 
-function channelURL(hostname, channel) {
-    return '/api/networks/'+hostname+'/'+encodeURIComponent(channel)+'/messages';
+function channelURL(prefix, channel) {
+    return prefix + '/' + encodeURIComponent(channel);
+}
+
+function channelMessagesURL(hostname, channel) {
+    return channelURL('/api/networks/'+hostname, channel)+'/messages';
 }
 
 function channelInput(event) {
@@ -87,7 +95,7 @@ function newChannelMessages(channel_messages, hostname, channel) {
     var hostname_id = hostnameId(hostname);
     var channel_id = hostname_id + '-' + channel;
     // Options passed with the form submit for channel input
-    var options = {url:channelURL(hostname, channel),
+    var options = {url:channelMessagesURL(hostname, channel),
 		   id:eid(channel_id)+'-input'};
 
     channel_messages.reverse();
@@ -110,15 +118,37 @@ function newChannelMessages(channel_messages, hostname, channel) {
 
 
 function refreshChannel(hostname, channel) {
-    $.getJSON(channelURL(hostname, channel), function (channel_messages) {
+    $.getJSON(channelMessagesURL(hostname, channel), function (channel_messages) {
 	newChannelMessages(channel_messages, hostname, channel);
+    });
+}
+
+function joinChannel(event) {
+    event.preventDefault();
+    var form = $(this).parent().parent()
+	.children(".modal-body")
+	.children(".form-inline");
+    var channel_name = form.children(".channel-name").val();
+    var channel_key = form.children(".channel-key").val();
+    $.ajax({
+	type: 'POST',
+	url: channelURL($(this).attr('href'), channel_name),
+	// Fix this - use real JSON encoding (why does jquery not do that?)
+	data: '{"key":"'+channel_key+'"}',
+	dataType: 'json',
+	contentType: 'application/json',
+	success: function () {
+	    console.log("Joining "+channel_name+" with key "+channel_key);
+	}
     });
 }
 
 function listChannels(hostname) {
     var url = '/api/networks/'+hostname;
     var hostname_id = hostnameId(hostname);
-    $('#'+hostname_id).append(serverControls(hostname_id));
+    $('#'+hostname_id).append(serverControls(hostname));
+    $('#'+hostname_id+'-channel-join .modal-footer a').click(joinChannel);
+    $('#'+hostname_id+' .modal').modal('hide');
     $.getJSON(url, function (channel_list) {
 	$.each(channel_list, function(index, val) {
 	    // Fixme: Will break with multiple servers
@@ -186,7 +216,7 @@ function addServerClear() {
     $('#hostname').next('.help-inline').empty();
 }
 
-function addServer() {
+function addServer(event) {
     event.preventDefault();
     $.ajax({
 	type: 'POST',
@@ -262,4 +292,5 @@ $(document).ready(function() {
 	$('#browserid').css('opacity', '0.4');
         navigator.id.get(gotVerifiedEmail);
     });
+
 });

@@ -297,10 +297,23 @@ class IRCChannel(Resource):
     @require_login
     def render_POST(self, request, session):
         """Join a channel"""
-        client_cmd = [session.email, "global", "join", self.name]
-        if "key" in request.args:
-            client_cmd.append(request.args["key"][0])
+        email = session.email
+        server = request.prepath[-2]
+        # Issue the client command
+        client_cmd = [email.encode("utf-8"),
+                      server, "join",
+                      self.name.encode("utf-8")]
+        message_json = json.loads(request.content.read())
+        if "key" in message_json:
+            key = message_json["key"]
+            client_cmd.append(key.encode("utf-8"))
+        else:
+            key = None
         irc_client.send(client_cmd)
+        # Save to the database
+        d = dbpool.runOperation("INSERT INTO channel_configs (user_email, name, server_id, key) VALUES (%s, %s, (SELECT id FROM servers WHERE hostname = %s), %s)",
+                                (email, self.name, server, key))
+        d.addCallback(new_user)
         return json.dumps(True)
 
 
