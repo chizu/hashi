@@ -118,7 +118,6 @@ body {
     filter: progid:DXImageTransform.Microsoft.gradient(enabled=false); /* IE6-9 */
   }
   .subnav-fixed .nav {
-    width: 938px;
     margin: 0 auto;
     padding: 0 1px;
   }
