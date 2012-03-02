@@ -2,9 +2,13 @@
 html, body {
     background-color: #eee;
 }
-body {
-    padding-top: 70px; /* 76px to make the container go all the way to the bottom of the topbar */
+
+@media (min-width: 980px) {
+    body {
+	padding-top: 70px; /* 76px to make the container go all the way to the bottom of the topbar */
+    }
 }
+
 .container > footer p {
     text-align: center; /* center align it with the container */
 }
