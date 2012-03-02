@@ -333,12 +333,14 @@ class IRCChannelMessages(Resource):
 FROM identities
 JOIN events on (events.target = identities.id)
 JOIN identities as source_identities on (events.source = source_identities.id)
-WHERE identities.token = %s order by events.id desc limit %s;"""
+WHERE identities.token = %s
+AND events.observer_email = %s
+ORDER BY events.id DESC LIMIT %s;"""
         if "count" in request.args:
             count = max(0, min(int(request.args["count"][0]), 1000))
         else:
             count = 30
-        d = dbpool.runQuery(msg_sql, (self.name, count));
+        d = dbpool.runQuery(msg_sql, (self.name, session.email, count));
         d.addCallback(render_messages)
         return server.NOT_DONE_YET
 

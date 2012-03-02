@@ -87,15 +87,16 @@ class History(object):
         # Done with setup, commit
         self.sql.commit()
 
-    def record(self, identity, kind, args):
+    def record(self, email, identity, kind, args):
         cur = self.sql.cursor()
-        record_sql = """INSERT INTO events (network_id, source, target, args)
-VALUES (%s, %s, %s, %s);"""
+        record_sql = """INSERT INTO events (network_id, source, target, args, observer_email)
+VALUES (%s, %s, %s, %s, %s);"""
         # Record each kind of message, with a fallback for unimplemented ones
         if kind == 'privmsg':
             source = NickIdentity(self, args[0]).id
             target = NickIdentity(self, args[1]).id
-            cur.execute(record_sql, (self.id, source, target, args[2:]))
+            cur.execute(record_sql, (self.id, source, target, args[2:], 
+                                     email))
         else:
             # No formatter, stuff it all into the args column (to prevent loss)
             cur.execute(record_sql, (self.id, None, None, args))
@@ -125,7 +126,7 @@ class RemoteEventReceiver(object):
                 args = event[4:]
                 history = History(network)
                 id_obj = NickIdentity(history, identity)
-                history_registry[network].record(id_obj, kind, args)
+                history_registry[network].record(email, id_obj, kind, args)
                 print("{0}:{1}:{2}:{3}".format(network, id_obj.token, kind, 
                                                args))
 
