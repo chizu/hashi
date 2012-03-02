@@ -112,7 +112,7 @@ function newChannelMessages(channel_messages, hostname, channel) {
 
     // Stick new message rows in the div
     $.each(channel_messages, function(index, val) {
-	irc_body.append('<tr><td class="nick">&lt;&nbsp;'+val[0]+'&gt;</td><td class="privmsg">'+val[1]+'</td></tr>');
+	irc_body.append('<tr><td class="nick">&lt;&nbsp;'+val[1]+'&gt;</td><td class="privmsg">'+val[2]+'</td></tr>');
     });
 }
 
