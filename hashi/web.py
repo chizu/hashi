@@ -59,7 +59,7 @@ class EventController(ZmqSubConnection):
     def __init__(self, email):
         self.requests = list()
         self.email = email
-        endpoint = ZmqEndpoint("connect", "tcp://127.0.0.1:9913")
+        endpoint = ZmqEndpoint("connect", "tcp://127.0.0.1:9914")
         super(EventController, self).__init__(zmqfactory, endpoint)
         self.subscribe(self.email)
 

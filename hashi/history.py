@@ -4,6 +4,7 @@ from collections import namedtuple
 
 import psycopg2
 import zmq
+import json
 
 
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
@@ -87,16 +88,16 @@ class History(object):
         # Done with setup, commit
         self.sql.commit()
 
-    def record(self, email, identity, kind, args):
+    def record(self, event_id, email, identity, kind, args):
         cur = self.sql.cursor()
-        record_sql = """INSERT INTO events (network_id, source, target, args, observer_email)
-VALUES (%s, %s, %s, %s, %s);"""
+        record_sql = """INSERT INTO events (id, network_id, source, target, args, observer_email)
+VALUES (%s, %s, %s, %s, %s, %s);"""
         # Record each kind of message, with a fallback for unimplemented ones
         if kind == 'privmsg':
             source = NickIdentity(self, args[0]).id
             target = NickIdentity(self, args[1]).id
-            cur.execute(record_sql, (self.id, source, target, args[2:], 
-                                     email))
+            cur.execute(record_sql,
+                        (event_id, self.id, source, target, args[2:], email))
         else:
             # No formatter, stuff it all into the args column (to prevent loss)
             cur.execute(record_sql, (self.id, None, None, args))
@@ -106,33 +107,30 @@ VALUES (%s, %s, %s, %s, %s);"""
 class RemoteEventReceiver(object):
     def __init__(self):
         context = zmq.Context.instance()
-        self.socket = context.socket(zmq.SUB)
-        self.socket.connect("tcp://127.0.0.1:9913")
-        self.socket.setsockopt(zmq.SUBSCRIBE, "")
-        self.queries = context.socket(zmq.REP)
-        self.queries.bind("tcp://127.0.0.1:9922")
-        self.poller = zmq.Poller()
-        self.poller.register(self.socket, zmq.POLLIN)
-        self.poller.register(self.queries, zmq.POLLIN)
+        self.clients = context.socket(zmq.PULL)
+        self.clients.bind("tcp://127.0.0.1:9913")
+        self.listeners = context.socket(zmq.PUB)
+        self.listeners.bind("tcp://127.0.0.1:9914")
 
     def run(self):
         while True:
-            socks = dict(self.poller.poll())
+            event = self.clients.recv_multipart()
+            email, event_id, network, identity, kind = event[:5]
+            args = event[5:]
+            history = History(network)
+            id_obj = NickIdentity(history, identity)
+            this = history_registry[network]
+            this.record(event_id, email, id_obj, kind, args)
+            # Publish it for listening clients
+            publish = json.dumps({"event_id":event_id,
+                                  "network":network,
+                                  "identity":identity,
+                                  "kind":kind,
+                                  "args":args})
+            self.listeners.send_multipart([email, publish])
 
-            # New history
-            if self.socket in socks and socks[self.socket] == zmq.POLLIN:
-                event = self.socket.recv_multipart()
-                email, network, identity, kind = event[:4]
-                args = event[4:]
-                history = History(network)
-                id_obj = NickIdentity(history, identity)
-                history_registry[network].record(email, id_obj, kind, args)
-                print("{0}:{1}:{2}:{3}".format(network, id_obj.token, kind, 
-                                               args))
-
-            # Queries against the history
-            if self.queries in socks and socks[self.queries] == zmq.POLLIN:
-                pass
+            print("{0}:{1}:{2}:{3}".format(network, id_obj.token, kind, 
+                                           args))
 
 if __name__ == "__main__":
     r = RemoteEventReceiver()

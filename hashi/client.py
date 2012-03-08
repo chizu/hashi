@@ -12,23 +12,41 @@ from twisted.words.protocols import irc
 
 from connections import *
 
-e = ZmqEndpoint("bind", "tcp://127.0.0.1:9913")
-event_publisher = ZmqPubConnection(zmqfactory, e)
+e = ZmqEndpoint("connect", "tcp://127.0.0.1:9913")
+event_publisher = ZmqPushConnection(zmqfactory, "client", e)
 
 class RemoteEventPublisher(object):
     def __init__(self, network, identity, email):
         self.network = network
         self.identity = identity
         self.email = email
-        e = ZmqEndpoint("connect", "tcp://127.0.0.1:9911")
+        event_id_sql = """SELECT max(events.id)
+FROM events
+JOIN servers ON (servers.id = events.network_id)
+WHERE events.observer_email = %s AND servers.hostname = %s;
+"""
+        # Deferred for finishing init
+        self.init = dbpool.runQuery(event_id_sql, (self.email, self.network))
+        def finish(l):
+            self.current_id = (l[0][0] or 0)
+        self.init.addCallback(finish)
 
     def event(self, kind, *args):
-        send = [self.network, self.identity, kind]
+        if not hasattr(self, "current_id"):
+            # Don't know what ID to use yet, handle events later
+            def retry(caller):
+                self.event(kind, *args)
+            self.init.addCallback(retry)
+            return
+        self.current_id += 1
+        send = [self.email, str(self.current_id), self.network,
+                self.identity, kind]
         send.extend(args)
+        print(send)
         for i, value in enumerate(send):
             if isinstance(value, unicode):
                 send[i] = value.encode("utf-8")
-        event_publisher.publish(send, self.email)
+        event_publisher.send(send)
 
 
 class Client(irc.IRCClient):

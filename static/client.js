@@ -1,3 +1,5 @@
+var current_event = 0;
+
 // Wraped around any id string with possible special characters
 function eid(myid) { 
     return '#' + myid.replace(/([#:|.])/g, '\\$1');
@@ -52,15 +54,22 @@ function serverControls(hostname) {
     return '<div class="subnav subnav-fixed"><ul class="nav nav-pills channels-nav"><li><a class="btn-primary" data-toggle="modal" href="#'+modal_id+'"><i class="icon-plus icon-white"/></a></li></ul></div><div class="tab-content"></div><div id="'+modal_id+'" class="modal fade hide"><div class="modal-header">Join a channel!<a class="close" data-dismiss="modal"><i class="icon-remove" /></a></div><div class="modal-body"><form class="form-inline"><input type="text" class="input channel-name" placeholder="Channel" /> <input type="text" class="input channel-key" placeholder="Key" /></form></div><div class="modal-footer"><a href="'+modal_url+'" class="btn btn-primary">Join</a></div></div>';
 }
 
+function handlePoll(data) {
+    //["irc.freenode.org", "hashi", "privmsg", "hashi", "##emo", "more testing"]
+    //newChannelMessages([[data[3].split('!')[0], data[5]],], 
+    //data[0], data[4]);
+    if (data["kind"] == "privmsg") {
+	alert(data);
+	var lines = [data["args"][0].split('!')[0], data["args"][2]];
+	newChannelMessages(lines, data["network"], data["args"][1]);
+    }
+}
+
 function startPoll() {
     // Poll for events forever!
     (function poll(){
 	$.ajax({ url: "/api/poll", 
-		 success: function(data){
-		     //["irc.freenode.org", "hashi", "privmsg", "hashi", "##emo", "more testing"]
-		     newChannelMessages([[data[3].split('!')[0], data[5]],], 
-					data[0], data[4]);
-		 }, 
+		 success: handlePoll, 
 		 dataType: "json",
 		 complete: poll,
 		 timeout: 5000
