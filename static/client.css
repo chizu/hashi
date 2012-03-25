@@ -173,7 +173,7 @@ html, body {
 }
 
 .channel-input {
-    position: absolute;
+    position: fixed;
     left: 2%;
     bottom: 4px;
     width: 96%;
