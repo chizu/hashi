@@ -172,6 +172,10 @@ html, body {
 }
 
 .channel-input {
-    margin-top: 0.5em;
-    width: 100%;
+    position: absolute;
+    left: 2%;
+    bottom: 4px;
+    width: 96%;
+    padding: 4px;
+    margin-left: -2px;
 }
