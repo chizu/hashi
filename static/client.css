@@ -167,6 +167,7 @@ html, body {
 }
 
 .irc-body td.privmsg {
+    width: 100%;
     word-break: break-all;
     white-space: pre-wrap;
 }
