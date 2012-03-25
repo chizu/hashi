@@ -164,12 +164,18 @@ html, body {
 .irc-body td.nick {
     padding-right: 1em;
     vertical-align: top;
+    box-shadow: inset -10px 0px 20px -10px rgba(0,0,0,0.4);
 }
 
 .irc-body td.privmsg {
     width: 100%;
+    padding-left: 1em;
     word-break: break-all;
     white-space: pre-wrap;
+}
+
+.irc-body img {
+    width:100%;
 }
 
 .channel-input {

@@ -127,13 +127,19 @@ function newChannelMessages(channel_messages, hostname, channel) {
 
     // Stick new message rows in the div
     $.each(channel_messages, function(index, val) {
-	if (val[3] == "privmsg") {
-	    line = '<tr><td class="nick">&lt;&nbsp;'+val[1]+'&gt;</td><td class="privmsg">'+val[2]+'</td></tr>';
+	row = $(document.createElement('tr'));
+	nick_col = $(document.createElement('td'));
+	msg_col = $(document.createElement('td'));
+	nick_col.addClass('nick');
+	msg_col.addClass('privmsg');
+	msg_col.text(String(val[2]));
+	nick_col.text(String(val[1]));
+	if (val[3] == "action") {
+	    msg_col.addClass('action');
 	}
-	else if (val[3] == "action") {
-	    line = '<tr><td class="nick">*&nbsp;'+val[1]+'</td><td class="privmsg action">'+val[2]+'</td></tr>';
-	}
-	irc_body.append(line);
+	row.append(nick_col);
+	row.append(msg_col);
+	irc_body.append(row);
     });
 }
 
