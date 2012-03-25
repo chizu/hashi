@@ -55,13 +55,18 @@ function serverControls(hostname) {
 }
 
 function handlePoll(data) {
-    //["irc.freenode.org", "hashi", "privmsg", "hashi", "##emo", "more testing"]
-    //newChannelMessages([[data[3].split('!')[0], data[5]],], 
-    //data[0], data[4]);
     if (data["kind"] == "privmsg") {
-	alert(data);
-	var lines = [data["args"][0].split('!')[0], data["args"][2]];
-	newChannelMessages(lines, data["network"], data["args"][1]);
+	var nick = data["args"][0].split('!')[0];
+	var lines = [[data["event_id"], nick, data["args"][2]]];
+	var channel = data["args"][1];
+
+	if (channel == data["identity"]) {
+	    // Talking to ourselves... private messages
+	    newChannelMessages(lines, data["network"], nick);
+	}
+	else {
+	    newChannelMessages(lines, data["network"], channel);
+	}
     }
 }
 
@@ -107,16 +112,17 @@ function newChannelMessages(channel_messages, hostname, channel) {
     var options = {url:channelMessagesURL(hostname, channel),
 		   id:eid(channel_id)+'-input'};
 
-    channel_messages.reverse();
-    
-    // Create the pill content divs if needed (initial load)
-    if (!$('#'+hostname_id+' .tab-content > '+eid(channel_id)).length) {
+    // If we're just getting a message from somewhere new, add the pills
+    if (!$(eid(channel_id)).length) {
+	// Fixme: Will break with multiple servers
+	$('.channels-nav')
+	    .append('<li><a href="#'+hostname_id+'-'+channel+'" data-toggle="tab">'+channel+'</a></li>');
 	$('#'+hostname_id).children('.tab-content')
 	    .append('<div id="'+channel_id+'" class="tab-pane"><table class="irc-body"></table></div>');
 	$(eid(channel_id)).append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
 	$(eid(channel_id)).children('form').submit(options, channelInput);
     }
-    
+
     var irc_body = $(eid(channel_id)+' table.irc-body');
 
     // Stick new message rows in the div
@@ -128,6 +134,7 @@ function newChannelMessages(channel_messages, hostname, channel) {
 
 function refreshChannel(hostname, channel) {
     $.getJSON(channelMessagesURL(hostname, channel), function (channel_messages) {
+	channel_messages.reverse();
 	newChannelMessages(channel_messages, hostname, channel);
     });
 }
@@ -160,9 +167,6 @@ function listChannels(hostname) {
     $('#'+hostname_id+' .modal').modal('hide');
     $.getJSON(url, function (channel_list) {
 	$.each(channel_list, function(index, val) {
-	    // Fixme: Will break with multiple servers
-	    $('.channels-nav')
-		.append('<li><a href="#'+hostname_id+'-'+val+'" data-toggle="tab">'+val+'</a></li>');
 	    refreshChannel(hostname, val);
 	});
     });

@@ -72,7 +72,7 @@ class EventController(ZmqSubConnection):
     def gotMessage(self, message, tag):
         try:
             for req in self.requests:
-                req.write(json.dumps(message))
+                req.write(message[0])
                 req.finish()
         finally:
             # Always empty the waiting requests
@@ -85,6 +85,8 @@ class APIPoller(Resource):
 
     @require_login
     def render_GET(self, request, session):
+        request.responseHeaders.addRawHeader("Content-Type",
+                                             "application/json")
         email = session.email
         if email not in APIPoller.controllers:
             utf_email = email.encode('utf-8')
