@@ -141,6 +141,8 @@ function newChannelMessages(channel_messages, hostname, channel) {
 	row.append(msg_col);
 	irc_body.append(row);
     });
+
+    $('html, body').animate({scrollTop: $(document).height()}, 800);
 }
 
 
