@@ -90,17 +90,18 @@ class History(object):
 
     def record(self, event_id, email, identity, kind, args):
         cur = self.sql.cursor()
-        record_sql = """INSERT INTO events (id, network_id, source, target, args, observer_email)
-VALUES (%s, %s, %s, %s, %s, %s);"""
+        record_sql = """INSERT INTO events (id, network_id, source, target, args, observer_email, kind)
+VALUES (%s, %s, %s, %s, %s, %s, %s);"""
         # Record each kind of message, with a fallback for unimplemented ones
-        if kind == 'privmsg':
+        if kind == 'privmsg' or kind == 'action':
             source = NickIdentity(self, args[0]).id
             target = NickIdentity(self, args[1]).id
             cur.execute(record_sql,
-                        (event_id, self.id, source, target, args[2:], email))
+                        (event_id, self.id, source, target, args[2:], 
+                         email, kind))
         else:
             # No formatter, stuff it all into the args column (to prevent loss)
-            cur.execute(record_sql, (self.id, None, None, args))
+            cur.execute(record_sql, (self.id, None, None, args, kind))
         self.sql.commit()
 
 

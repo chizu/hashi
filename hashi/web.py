@@ -315,8 +315,11 @@ class IRCChannel(Resource):
         # Save to the database
         d = dbpool.runOperation("INSERT INTO channel_configs (user_email, name, server_id, key) VALUES (%s, %s, (SELECT id FROM servers WHERE hostname = %s), %s)",
                                 (email, self.name, server, key))
-        d.addCallback(new_user)
-        return json.dumps(True)
+        def finished(result):
+            request.write(json.dumps(True))
+            request.finish()
+        d.addCallback(finished)
+        return server.NOT_DONE_YET
 
 
 class IRCChannelMessages(Resource):
@@ -331,7 +334,7 @@ class IRCChannelMessages(Resource):
         def render_messages(l):
             request.write(json.dumps(l))
             request.finish()
-        msg_sql = """SELECT events.id, source_identities.token, events.args
+        msg_sql = """SELECT events.id, source_identities.token, events.args, events.kind
 FROM identities
 JOIN events on (events.target = identities.id)
 JOIN identities as source_identities on (events.source = source_identities.id)

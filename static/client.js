@@ -55,9 +55,9 @@ function serverControls(hostname) {
 }
 
 function handlePoll(data) {
-    if (data["kind"] == "privmsg") {
+    if (data["kind"] == "privmsg" || data["kind"] == "action") {
 	var nick = data["args"][0].split('!')[0];
-	var lines = [[data["event_id"], nick, data["args"][2]]];
+	var lines = [[data["event_id"], nick, data["args"][2], data["kind"]]];
 	var channel = data["args"][1];
 
 	if (channel == data["identity"]) {
@@ -127,7 +127,13 @@ function newChannelMessages(channel_messages, hostname, channel) {
 
     // Stick new message rows in the div
     $.each(channel_messages, function(index, val) {
-	irc_body.append('<tr><td class="nick">&lt;&nbsp;'+val[1]+'&gt;</td><td class="privmsg">'+val[2]+'</td></tr>');
+	if (val[3] == "privmsg") {
+	    line = '<tr><td class="nick">&lt;&nbsp;'+val[1]+'&gt;</td><td class="privmsg">'+val[2]+'</td></tr>';
+	}
+	else if (val[3] == "action") {
+	    line = '<tr><td class="nick">*&nbsp;'+val[1]+'</td><td class="privmsg action">'+val[2]+'</td></tr>';
+	}
+	irc_body.append(line);
     });
 }
 
