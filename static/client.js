@@ -139,7 +139,9 @@ function newChannelMessages(channel_messages, hostname, channel) {
 	msg_col = $(document.createElement('td'));
 	nick_col.addClass('nick');
 	msg_col.addClass('privmsg');
+	var url_exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
 	msg_col.text(String(val[2]));
+	msg_col.html(msg_col.html().replace(url_exp, '<a href="$1">$1</a>'));
 	nick_col.text(String(val[1]));
 	if (val[3] == "action") {
 	    msg_col.addClass('action');
