@@ -125,6 +125,13 @@ function newChannelMessages(channel_messages, hostname, channel) {
 
     var irc_body = $(eid(channel_id)+' table.irc-body');
 
+    if ($(window).scrollTop() + $(window).height() == $(document).height()) {
+	scrolled_down = true;
+    }
+    else {
+	scrolled_down = false;
+    }
+
     // Stick new message rows in the div
     $.each(channel_messages, function(index, val) {
 	row = $(document.createElement('tr'));
@@ -142,7 +149,10 @@ function newChannelMessages(channel_messages, hostname, channel) {
 	irc_body.append(row);
     });
 
-    $('html, body').animate({scrollTop: $(document).height()}, 800);
+    // Scroll if new lines in the current channel and scrolled down
+    if ($(eid(channel_id)).hasClass("active") && scrolled_down) {
+	$('html, body').animate({scrollTop: $(document).height()}, 800);
+    }
 }
 
 
