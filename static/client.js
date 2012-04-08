@@ -160,6 +160,8 @@ function newChannelMessages(channel_messages, hostname, channel) {
 
 function refreshChannel(hostname, channel) {
     $.getJSON(channelMessagesURL(hostname, channel), function (channel_messages) {
+	// Newest message before we reverse it
+	current_event = Math.max(channel_messages[0], current_event);
 	channel_messages.reverse();
 	newChannelMessages(channel_messages, hostname, channel);
     });
