@@ -300,10 +300,10 @@ class IRCChannel(Resource):
     def render_POST(self, request, session):
         """Join a channel"""
         email = session.email
-        server = request.prepath[-2]
+        irc_server = request.prepath[-2]
         # Issue the client command
         client_cmd = [email.encode("utf-8"),
-                      server, "join",
+                      irc_server, "join",
                       self.name.encode("utf-8")]
         message_json = json.loads(request.content.read())
         if "key" in message_json:
@@ -314,7 +314,7 @@ class IRCChannel(Resource):
         irc_client.send(client_cmd)
         # Save to the database
         d = dbpool.runOperation("INSERT INTO channel_configs (user_email, name, server_id, key) VALUES (%s, %s, (SELECT id FROM servers WHERE hostname = %s), %s)",
-                                (email, self.name, server, key))
+                                (email, self.name, irc_server, key))
         def finished(result):
             request.write(json.dumps(True))
             request.finish()
