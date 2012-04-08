@@ -101,7 +101,8 @@ VALUES (%s, %s, %s, %s, %s, %s, %s);"""
                          email, kind))
         else:
             # No formatter, stuff it all into the args column (to prevent loss)
-            cur.execute(record_sql, (self.id, None, None, args, kind))
+            cur.execute(record_sql, (event_id, self.id, None, None, 
+                                     args, email, kind))
         self.sql.commit()
 
 
