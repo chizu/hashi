@@ -1,5 +1,35 @@
 var current_event = 0;
 
+// hashCode and intToARGB borrowed from http://stackoverflow.com/a/3426956
+function hashCode(str) { // java String#hashCode
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+	hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return hash;
+} 
+
+function zeroPad(num,count) {
+    var numZeropad = num + '';
+    while(numZeropad.length < count) {
+	numZeropad = "0" + numZeropad;
+    }
+    return numZeropad;
+}
+
+// Colored nicks
+function intToDark(i) {
+    r = (i >> 24) & 0xff;
+    g = (i >> 16) & 0xff;
+    b = (i >> 8) & 0xff;
+    if ((r*299 + g*587 + b*114) / 1000 < 140) {
+	return zeroPad(r.toString(16), 2) + zeroPad(g.toString(16), 2) + zeroPad(b.toString(16), 2);
+    }
+    else {
+	return intToDark(i * 42);
+    }
+}
+
 // Wraped around any id string with possible special characters
 function eid(myid) { 
     return '#' + myid.replace(/([#:|.])/g, '\\$1');
@@ -144,7 +174,10 @@ function newChannelMessages(channel_messages, hostname, channel) {
 	var url_exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
 	msg_col.text(String(val[2]));
 	msg_col.html(msg_col.html().replace(url_exp, '<a href="$1">$1</a>'));
-	nick_col.text(String(val[1]));
+	nick_text = String(val[1]);
+	nick_color = "#"+intToDark(hashCode(nick_text));
+	row.css("color", nick_color);
+	nick_col.text(nick_text);
 	if (val[3] == "action") {
 	    msg_col.addClass('action');
 	}
