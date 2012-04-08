@@ -82,9 +82,24 @@ WHERE enabled = true AND user_email = %s AND servers.hostname = %s;
         self.channels.append(channel)
         self.publish.event("joined", channel)
 
+    def userJoined(self, user, channel):
+        self.publish.event("userJoined", user, channel)
+
     def left(self, channel):
         self.channels.remove(channel)
         self.publish.event("left", channel)
+
+    def userLeft(self, user, channel):
+        self.publish.event("userLeft", user, channel)
+
+    def userQuit(self, user, msg):
+        self.publish.event("userQuit", user, msg)
+
+    def userKicked(self, user, channel, kicker, msg):
+        self.publish.event("userKicked", user, channel, kicker, msg)
+
+    def userRenamed(self, oldname, newname):
+        self.publish.event("userRenamed", oldname, newname)
 
     def msg(self, target, msg, length=None):
         ret = irc.IRCClient.msg(self, target, msg, length)
