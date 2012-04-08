@@ -181,6 +181,7 @@ function joinChannel(event) {
 	contentType: 'application/json',
 	success: function () {
 	    console.log("Joining "+channel_name+" with key "+channel_key);
+	    $(".modal").modal('hide');
 	}
     });
 }
