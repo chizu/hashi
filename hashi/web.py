@@ -58,6 +58,7 @@ class API(Resource):
 class EventController(ZmqSubConnection):
     def __init__(self, email):
         self.requests = list()
+        self.pending = list()
         self.email = email
         endpoint = ZmqEndpoint("connect", "tcp://127.0.0.1:9914")
         super(EventController, self).__init__(zmqfactory, endpoint)
@@ -70,13 +71,20 @@ class EventController(ZmqSubConnection):
         self.requests.remove(request)
 
     def gotMessage(self, message, tag):
-        try:
-            for req in self.requests:
-                req.write(message[0])
-                req.finish()
-        finally:
-            # Always empty the waiting requests
-            self.requests = list()
+        if self.requests:
+            try:
+                reply = [json.loads(message[0])]
+                self.pending.extend(reply)
+                reply_json = json.dumps(self.pending)
+                for req in self.requests:
+                    req.write(reply_json)
+                    req.finish()
+            finally:
+                # Always empty the waiting requests
+                self.requests = list()
+                self.pending = list()
+        else:
+            self.pending.append(json.loads(message[0]))
 
 
 class APIPoller(Resource):

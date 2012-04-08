@@ -55,19 +55,21 @@ function serverControls(hostname) {
 }
 
 function handlePoll(data) {
-    if (data["kind"] == "privmsg" || data["kind"] == "action") {
-	var nick = data["args"][0].split('!')[0];
-	var lines = [[data["event_id"], nick, data["args"][2], data["kind"]]];
-	var channel = data["args"][1];
-
-	if (channel == data["identity"]) {
-	    // Talking to ourselves... private messages
-	    newChannelMessages(lines, data["network"], nick);
+    $.each(data, function(index, msg) {
+	if (msg["kind"] == "privmsg" || msg["kind"] == "action") {
+	    var nick = msg["args"][0].split('!')[0];
+	    var lines = [[msg["event_id"], nick, msg["args"][2], msg["kind"]]];
+	    var channel = msg["args"][1];
+	    
+	    if (channel == msg["identity"]) {
+		// Talking to ourselves... private messages
+		newChannelMessages(lines, msg["network"], nick);
+	    }
+	    else {
+		newChannelMessages(lines, msg["network"], channel);
+	    }
 	}
-	else {
-	    newChannelMessages(lines, data["network"], channel);
-	}
-    }
+    });
 }
 
 function startPoll() {
