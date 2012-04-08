@@ -30,6 +30,9 @@ class Identity(object):
             return id_obj
 
     def __init__(self, history, token):
+        if hasattr(self, "history"):
+            # Skip reinit if we already have.
+            return
         self.history = history
         self.sql = history.sql
         self.token = token
@@ -65,16 +68,8 @@ class NickIdentity(Identity):
 
 class History(object):
     """Interact with client history for a network."""
-    def __new__(cls, irc_network):
-        # Pull it out of cached objects if we can
-        if irc_network in history_registry:
-            return history_registry[irc_network]
-        else:
-            h_obj = object.__new__(cls, irc_network)
-            history_registry[irc_network] = h_obj
-            return h_obj
-
     def __init__(self, irc_network):
+        print("called init")
         self.sql = psycopg2.connect("dbname=hashi")
         self.irc_network = irc_network
         cur = self.sql.cursor()
@@ -119,9 +114,10 @@ class RemoteEventReceiver(object):
             event = self.clients.recv_multipart()
             email, event_id, network, identity, kind = event[:5]
             args = event[5:]
-            history = History(network)
-            id_obj = NickIdentity(history, identity)
+            if network not in history_registry:
+                history_registry[network] = History(network)
             this = history_registry[network]
+            id_obj = NickIdentity(this, identity)
             this.record(event_id, email, id_obj, kind, args)
             # Publish it for listening clients
             publish = json.dumps({"event_id":event_id,
