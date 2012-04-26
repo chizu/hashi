@@ -175,6 +175,10 @@ html, body {
     white-space: pre-wrap;
 }
 
+.irc-body td.action {
+    font-style: italic;
+}
+
 .irc-body img {
     width:100%;
 }
