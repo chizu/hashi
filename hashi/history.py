@@ -88,7 +88,7 @@ class History(object):
         record_sql = """INSERT INTO events (id, network_id, source, target, args, observer_email, kind)
 VALUES (%s, %s, %s, %s, %s, %s, %s);"""
         # Record each kind of message, with a fallback for unimplemented ones
-        if kind == 'privmsg' or kind == 'action':
+        if kind == 'privmsg' or kind == 'action' or kind == 'notice':
             source = NickIdentity(self, args[0]).id
             target = NickIdentity(self, args[1]).id
             cur.execute(record_sql,

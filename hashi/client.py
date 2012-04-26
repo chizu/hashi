@@ -109,6 +109,9 @@ WHERE enabled = true AND user_email = %s AND servers.hostname = %s;
     def privmsg(self, user, channel, msg):
         self.publish.event("privmsg", user, channel, msg)
 
+    def noticed(self, user, channel, msg):
+        self.publish.event("notice", user, channel, msg)
+
     def action(self, user, channel, msg):
         self.publish.event("action", user, channel, msg)
 
