@@ -45,7 +45,7 @@ function loggedIn(email) {
     setSessions([ { email: email } ]);
     $('#new-server').modal('hide');
     $('#logout').bind('click', logout);
-    //$('#new-server').submit(addServer);
+    $('#new-server').submit(addServer);
     listServers();
     $('#usermenu .dropdown-toggle').html(email + '<b class="caret" />');
     $('.dropdown-toggle').dropdown();
