@@ -146,8 +146,7 @@ function newChannelMessages(channel_messages, hostname, channel) {
 
     // If we're just getting a message from somewhere new, add the pills
     if (!$(eid(channel_id)).length) {
-	// Fixme: Will break with multiple servers
-	$('.channels-nav')
+	$('#'+hostname_id).find('.channels-nav')
 	    .append('<li><a href="#'+hostname_id+'-'+channel+'" data-toggle="tab">'+channel+'</a></li>');
 	$('#'+hostname_id).children('.tab-content')
 	    .append('<div id="'+channel_id+'" class="tab-pane"><table class="irc-body"></table></div>');
