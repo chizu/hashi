@@ -129,8 +129,7 @@ function channelInput(event) {
     $.ajax({
 	type: 'POST',
 	url: event.data.url,
-	// Fix this - use real JSON encoding (why does jquery not do that?)
-	data: '{"privmsg":"'+$(event.data.id).val()+'"}',
+	data: JSON.stringify({"privmsg":$(event.data.id).val()}),
 	dataType: 'json',
 	contentType: 'application/json',
 	success: function () {
@@ -226,8 +225,7 @@ function joinChannel(event) {
 	$.ajax({
 	    type: 'POST',
 	    url: channelURL(url, channel_name),
-	    // Fix this - use real JSON encoding (why does jquery not do that?)
-	    data: '{"key":"'+channel_key+'"}',
+	    data: JSON.stringify({"key":channel_key}),
 	    dataType: 'json',
 	    contentType: 'application/json',
 	    success: function () {
