@@ -179,6 +179,10 @@ html, body {
     font-style: italic;
 }
 
+.irc-body td.notice {
+    font-style: bold;
+}
+
 .irc-body img {
     width:100%;
 }
