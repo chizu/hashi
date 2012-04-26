@@ -154,13 +154,13 @@ class HashiController(ZmqPullConnection):
             command_args = message[3:]
         else:
             command_args = None
-        subject = self.hashi[user]
+        subject = self.hashi.clients[user]
         # If there's a server specified, pick that server here
         if server != "global":
             subject = subject[server]
         # Otherwise, the iterable subject means for all servers
         if command == 'connect':
-            # Arguments are 'hostname nick'
+            hostname, nick = command_args
             start_sql = """SELECT hostname, port, ssl
 FROM servers WHERE hostname = %s;"""
             d = dbpool.runQuery(start_sql, (hostname,))
@@ -179,7 +179,7 @@ class Hashi(object):
         # Dict of all clients indexed by email
         self.clients = defaultdict(dict)
         e = ZmqEndpoint("bind", "tcp://127.0.0.1:9912")
-        self.socket = HashiController(zmqfactory, e, self.clients)
+        self.socket = HashiController(zmqfactory, e, self)
         self.ssl_context = ClientContextFactory()
 
     def start(self):

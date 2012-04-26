@@ -250,15 +250,18 @@ class IRCServer(Resource):
         def render_channels(l):
             request.write(json.dumps(l))
             request.finish()
-        chan_sql = 'SELECT name FROM channel_configs WHERE user_email = %s;'
-        d = dbpool.runQuery(chan_sql, (session.email,));
+        chan_sql = """SELECT name FROM channel_configs 
+JOIN servers ON channel_configs.server_id = servers.id
+WHERE user_email = %s AND hostname = %s;"""
+        d = dbpool.runQuery(chan_sql, (session.email,self.name));
         d.addCallback(render_channels)
         return server.NOT_DONE_YET
 
     def connect_server(self, result, request, nick):
         email = request.getSession().email
         # Tell the IRC client when a server is added so it can refresh
-        irc_client.send([email, "global", "connect", self.name, nick])
+        irc_client.send([str(email), "global", "connect", self.name,
+                         str(nick)])
         # Maybe this should be in a callback?
         # Refreshing the web interface here will sometimes be too fast.
         # Timing bugs!
