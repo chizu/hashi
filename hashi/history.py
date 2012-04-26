@@ -73,13 +73,14 @@ class History(object):
         self.sql = psycopg2.connect("dbname=hashi")
         self.irc_network = irc_network
         cur = self.sql.cursor()
-        cur.execute("SELECT id FROM networks WHERE name = %s", (irc_network,))
+        cur.execute("SELECT id FROM servers WHERE hostname = %s",
+                    (irc_network,))
         result = cur.fetchone()
         if result:
             self.id = result[0]
-        else:
-            cur.execute("INSERT INTO networks (name) VALUES (%s)",
-                        (irc_network,))
+        #else:
+        #    cur.execute("INSERT INTO networks (name) VALUES (%s)",
+        #                (irc_network,))
         # Done with setup, commit
         self.sql.commit()
 
