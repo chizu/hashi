@@ -30,6 +30,10 @@ function intToDark(i) {
     }
 }
 
+function scrollBottom(speed) {
+    $('html, body').animate({scrollTop: $(document).height()}, speed);
+}
+
 // Wraped around any id string with possible special characters
 function eid(myid) { 
     return '#' + myid.replace(/([#:|.])/g, '\\$1');
@@ -138,6 +142,10 @@ function channelInput(event) {
     });
 }
 
+function switchChannelTab(event) {
+    scrollBottom(400);
+}
+
 function addChannelTab(hostname, channel) {
     var hostname_id = hostnameId(hostname);
     var channel_id = hostname_id + '-' + channel;
@@ -146,8 +154,15 @@ function addChannelTab(hostname, channel) {
     var options = {url:channelMessagesURL(hostname, channel),
 		   id:eid(channel_id)+'-input'};
 
-    $('#'+hostname_id).find('.channels-nav')
-	.append('<li><a href="#'+hostname_id+'-'+channel+'" data-toggle="tab">'+channel+'</a></li>');
+    link = $(document.createElement('a'));
+    link.attr('href', '#'+hostname_id+'-'+channel);
+    link.attr('data-toggle', 'tab');
+    link.text(String(channel));
+    link.click(switchChannelTab);
+    li = $(document.createElement('li'));
+    li.append(link);
+    $('#'+hostname_id).find('.channels-nav').append(li);
+
     $('#'+hostname_id).children('.tab-content')
 	.append('<div id="'+channel_id+'" class="tab-pane"><table class="irc-body"></table></div>');
     $(eid(channel_id)).append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
@@ -199,7 +214,7 @@ function newChannelMessages(channel_messages, hostname, channel) {
 
     // Scroll if new lines in the current channel and scrolled down
     if ($(eid(channel_id)).hasClass("active") && scrolled_down) {
-	$('html, body').animate({scrollTop: $(document).height()}, 800);
+	scrollBottom(800);
     }
 }
 
