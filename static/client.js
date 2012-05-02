@@ -99,9 +99,11 @@ function handlePoll(data) {
 	    
 	    if (channel == msg["identity"]) {
 		// Talking to ourselves... private messages
+		addChannelTab(msg["network"], nick);
 		newChannelMessages(lines, msg["network"], nick);
 	    }
 	    else {
+		addChannelTab(msg["network"], channel);
 		newChannelMessages(lines, msg["network"], channel);
 	    }
 	}
@@ -144,38 +146,42 @@ function channelInput(event) {
 
 function switchChannelTab(event) {
     scrollBottom(400);
+    $(this).removeClass('warning');
 }
 
 function addChannelTab(hostname, channel) {
     var hostname_id = hostnameId(hostname);
     var channel_id = hostname_id + '-' + channel;
 
-    // Options passed with the form submit for channel input
-    var options = {url:channelMessagesURL(hostname, channel),
-		   id:eid(channel_id)+'-input'};
+    // If we're just getting a message from somewhere new, add the pills
+    if (!$(eid(channel_id)).length) {
+	// Options passed with the form submit for channel input
+	var options = {url:channelMessagesURL(hostname, channel),
+		       id:eid(channel_id)+'-input'};
 
-    link = $(document.createElement('a'));
-    link.attr('href', '#'+hostname_id+'-'+channel);
-    link.attr('data-toggle', 'tab');
-    link.text(String(channel));
-    link.click(switchChannelTab);
-    li = $(document.createElement('li'));
-    li.append(link);
-    $('#'+hostname_id).find('.channels-nav').append(li);
-
-    $('#'+hostname_id).children('.tab-content')
-	.append('<div id="'+channel_id+'" class="tab-pane"><table class="irc-body"></table></div>');
-    $(eid(channel_id)).append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
-    $(eid(channel_id)).children('form').submit(options, channelInput);
+	link = $(document.createElement('a'));
+	link.attr('href', '#'+hostname_id+'-'+channel);
+	link.attr('data-toggle', 'tab');
+	link.text(String(channel));
+	link.bind('shown', switchChannelTab);
+	li = $(document.createElement('li'));
+	li.append(link);
+	$('#'+hostname_id).find('.channels-nav').append(li);
+	
+	$('#'+hostname_id).children('.tab-content')
+	    .append('<div id="'+channel_id+'" class="tab-pane"><table class="irc-body"></table></div>');
+	$(eid(channel_id)).append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
+	$(eid(channel_id)).children('form').submit(options, channelInput);
+    }
 }
 
 function newChannelMessages(channel_messages, hostname, channel) {
     var hostname_id = hostnameId(hostname);
     var channel_id = hostname_id + '-' + channel;
+    var tab_link = $('a[href$="'+channel_id+'"]');
 
-    // If we're just getting a message from somewhere new, add the pills
-    if (!$(eid(channel_id)).length) {
-	addChannelTab(hostname, channel);
+    if (!tab_link.parent().hasClass('active')) {
+	tab_link.addClass('warning');
     }
 
     var irc_body = $(eid(channel_id)+' table.irc-body');
@@ -264,6 +270,7 @@ function listChannels(hostname) {
     $('#'+hostname_id+' .modal').modal('hide');
     $.getJSON(url, function (channel_list) {
 	$.each(channel_list, function(index, val) {
+	    addChannelTab(hostname, val);
 	    refreshChannel(hostname, val);
 	});
     });

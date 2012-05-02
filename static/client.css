@@ -195,3 +195,11 @@ html, body {
     padding: 4px;
     margin-left: -2px;
 }
+
+.subnav a.warning {
+    color: #f89406;
+}
+
+.subnav a.warning:hover {
+    color: #c86400;
+}
