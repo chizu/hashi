@@ -345,7 +345,7 @@ class IRCChannelMessages(Resource):
         def render_messages(l):
             request.write(json.dumps(l))
             request.finish()
-        msg_sql = """SELECT events.id, source_identities.token, events.args, events.kind
+        msg_sql = """SELECT events.id, source_identities.token, events.args, events.kind, to_char(events.timestamp, 'IYYY:MM:DD-HH24:MI:SS:MS')
 FROM identities
 JOIN events on (events.target = identities.id)
 JOIN identities as source_identities on (events.source = source_identities.id)

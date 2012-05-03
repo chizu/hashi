@@ -175,12 +175,30 @@ html, body {
     white-space: pre-wrap;
 }
 
-.irc-body td.action {
+.irc-body tr.action {
     font-style: italic;
 }
 
-.irc-body td.notice {
+.irc-body tr.notice {
     font-style: bold;
+}
+
+.irc-body tr.userJoined {
+    font-size: 0.8em;
+    font-style: italic;
+}
+
+.irc-body tr.userJoined td.privmsg:after {
+    content: "joined";
+}
+
+.irc-body tr.userLeft {
+    font-size: 0.8em;
+    font-style: italic;
+}
+
+.irc-body tr.userLeft td.privmsg:after {
+    content: "left";
 }
 
 .irc-body img {

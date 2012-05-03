@@ -84,21 +84,22 @@ class History(object):
         # Done with setup, commit
         self.sql.commit()
 
-    def record(self, event_id, email, identity, kind, args):
+    def record(self, event_id, email, identity, kind, timestamp, args):
         cur = self.sql.cursor()
-        record_sql = """INSERT INTO events (id, network_id, source, target, args, observer_email, kind)
-VALUES (%s, %s, %s, %s, %s, %s, %s);"""
+        record_sql = """INSERT INTO events (id, network_id, source, target, args, observer_email, kind, timestamp)
+VALUES (%s, %s, %s, %s, %s, %s, %s, timestamp 'epoch' + %s * INTERVAL '1 second');"""
         # Record each kind of message, with a fallback for unimplemented ones
-        if kind == 'privmsg' or kind == 'action' or kind == 'notice':
+        if kind == 'privmsg' or kind == 'action' or kind == 'notice'\
+                or kind == 'userJoined' or kind == 'userLeft':
             source = NickIdentity(self, args[0]).id
             target = NickIdentity(self, args[1]).id
             cur.execute(record_sql,
                         (event_id, self.id, source, target, args[2:], 
-                         email, kind))
+                         email, kind, timestamp))
         else:
             # No formatter, stuff it all into the args column (to prevent loss)
             cur.execute(record_sql, (event_id, self.id, None, None, 
-                                     args, email, kind))
+                                     args, email, kind, timestamp))
         self.sql.commit()
 
 
@@ -113,13 +114,13 @@ class RemoteEventReceiver(object):
     def run(self):
         while True:
             event = self.clients.recv_multipart()
-            email, event_id, network, identity, kind = event[:5]
-            args = event[5:]
+            email, event_id, network, identity, kind, timestamp = event[:6]
+            args = event[6:]
             if network not in history_registry:
                 history_registry[network] = History(network)
             this = history_registry[network]
             id_obj = NickIdentity(this, identity)
-            this.record(event_id, email, id_obj, kind, args)
+            this.record(event_id, email, id_obj, kind, timestamp, args)
             # Publish it for listening clients
             publish = json.dumps({"event_id":event_id,
                                   "network":network,

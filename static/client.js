@@ -90,9 +90,7 @@ function serverControls(hostname) {
 
 function handlePoll(data) {
     $.each(data, function(index, msg) {
-	if (msg["kind"] == "privmsg" || 
-	    msg["kind"] == "action" || 
-	    msg["kind"] == "notice") {
+	if (msg["kind"] != "userQuit") {
 	    var nick = msg["args"][0].split('!')[0];
 	    var lines = [[msg["event_id"], nick, msg["args"][2], msg["kind"]]];
 	    var channel = msg["args"][1];
@@ -207,12 +205,7 @@ function newChannelMessages(channel_messages, hostname, channel) {
 	nick_color = "#"+intToDark(hashCode(nick_text));
 	row.css("color", nick_color);
 	nick_col.text(nick_text);
-	if (val[3] == "action") {
-	    msg_col.addClass('action');
-	}
-	else if (val[3] == "notice") {
-	    msg_col.addClass('notice');
-	}
+	row.addClass(val[3]);
 	row.append(nick_col);
 	row.append(msg_col);
 	irc_body.append(row);

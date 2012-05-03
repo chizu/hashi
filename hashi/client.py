@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import json
+import time
 from collections import defaultdict
 
 from zmq.core import constants
@@ -40,7 +41,7 @@ WHERE events.observer_email = %s AND servers.hostname = %s;
             return
         self.current_id += 1
         send = [self.email, str(self.current_id), self.network,
-                self.identity, kind]
+                self.identity, kind, str(time.time())]
         send.extend(args)
         print(send)
         for i, value in enumerate(send):
