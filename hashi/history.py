@@ -126,11 +126,12 @@ class RemoteEventReceiver(object):
                                   "network":network,
                                   "identity":identity,
                                   "kind":kind,
-                                  "args":args})
+                                  "args":args,
+                                  "timestamp":timestamp})
             self.listeners.send_multipart([email, publish])
 
-            print("{0}:{1}:{2}:{3}".format(network, id_obj.token, kind, 
-                                           args))
+            print("{0}:{1}:{2}:{3}:{4}".format(network, id_obj.token, kind, 
+                                               args, timestamp))
 
 if __name__ == "__main__":
     r = RemoteEventReceiver()
