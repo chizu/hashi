@@ -147,9 +147,13 @@ function switchChannelTab(event) {
     $(this).removeClass('warning');
 }
 
+function channelID(hostname_id, channel) {
+    return hostname_id + '-' + String(channel).replace('/', '-slash-');
+}
+
 function addChannelTab(hostname, channel) {
     var hostname_id = hostnameId(hostname);
-    var channel_id = hostname_id + '-' + channel;
+    var channel_id = channelID(hostname_id, channel);
 
     // If we're just getting a message from somewhere new, add the pills
     if (!$(eid(channel_id)).length) {
@@ -158,7 +162,7 @@ function addChannelTab(hostname, channel) {
 		       id:eid(channel_id)+'-input'};
 
 	link = $(document.createElement('a'));
-	link.attr('href', '#'+hostname_id+'-'+channel);
+	link.attr('href', '#'+channel_id);
 	link.attr('data-toggle', 'tab');
 	link.text(String(channel));
 	link.bind('shown', switchChannelTab);
@@ -175,7 +179,7 @@ function addChannelTab(hostname, channel) {
 
 function newChannelMessages(channel_messages, hostname, channel) {
     var hostname_id = hostnameId(hostname);
-    var channel_id = hostname_id + '-' + channel;
+    var channel_id = channelID(hostname_id, channel);
     var tab_link = $('a[href$="'+channel_id+'"]');
 
     if (!tab_link.parent().hasClass('active')) {
