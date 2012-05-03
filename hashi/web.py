@@ -32,6 +32,10 @@ def require_login(func):
     return wrapped
 
 
+class LongSession(server.Session):
+    sessionTimeout = 60 * 60 * 24 * 7
+
+
 class Hashioki(Resource):
     def getChild(self, name, request):
         if name == '':
@@ -389,6 +393,7 @@ def start():
     rest_api.putChild('networks', irc_network)
 
     site = server.Site(root)
+    site.sessionFactory = LongSession
 
     reactor.listenTCP(8080, site)
 
