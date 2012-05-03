@@ -247,7 +247,7 @@ class IRCServer(Resource):
         if name == '':
             return self
         else:
-            return IRCChannel(name)
+            return IRCChannel(name, self.name)
 
     @require_login
     def render_GET(self, request, session):
@@ -302,25 +302,27 @@ AND NOT EXISTS (SELECT 1 FROM server_configs
 
 
 class IRCChannel(Resource):
-    def __init__(self, name):
+    def __init__(self, name, server):
         Resource.__init__(self)
         self.name = name
+        self.server = server
 
     def getChild(self, name, request):
         if name == '':
             return self
         elif name == 'messages':
             return IRCChannelMessages(self.name)
-        return Resource.getChild(self, name, request)
+        else:
+            # Channel name has slashes, support a "multilevel" channel name.
+            return IRCChannel(self.name + '/' + name, self.server)
 
     @require_login
     def render_POST(self, request, session):
         """Join a channel"""
         email = session.email
-        irc_server = request.prepath[-2]
         # Issue the client command
         client_cmd = [email.encode("utf-8"),
-                      irc_server, "join",
+                      self.server, "join",
                       self.name.encode("utf-8")]
         message_json = json.loads(request.content.read())
         if "key" in message_json:
@@ -331,7 +333,7 @@ class IRCChannel(Resource):
         irc_client.send(client_cmd)
         # Save to the database
         d = dbpool.runOperation("INSERT INTO channel_configs (user_email, name, server_id, key) VALUES (%s, %s, (SELECT id FROM servers WHERE hostname = %s), %s)",
-                                (email, self.name, irc_server, key))
+                                (email, self.name, self.server, key))
         def finished(result):
             request.write(json.dumps(True))
             request.finish()
