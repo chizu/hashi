@@ -4,6 +4,7 @@ import urllib
 from urlparse import parse_qs
 from functools import wraps
 
+import unicodenazi
 from psycopg2 import IntegrityError, errorcodes
 from txZMQ import ZmqEndpoint
 from twisted.internet import reactor
