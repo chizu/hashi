@@ -257,7 +257,8 @@ class IRCServer(Resource):
             request.finish()
         chan_sql = """SELECT name FROM channel_configs 
 JOIN servers ON channel_configs.server_id = servers.id
-WHERE user_email = %s AND hostname = %s;"""
+WHERE user_email = %s AND hostname = %s
+ORDER BY name;"""
         d = dbpool.runQuery(chan_sql, (session.email,self.name));
         d.addCallback(render_channels)
         return server.NOT_DONE_YET
