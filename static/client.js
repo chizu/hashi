@@ -110,6 +110,11 @@ function handlePoll(data) {
 
 function startPoll() {
     // Poll for events forever!
+    var socket = new WebSocket('wss://spicious.com:443/api/websocket');
+    socket.onopen = function () {
+	socket.send("test");
+    };
+    /*
     (function poll(){
 	$.ajax({ url: "/api/poll", 
 		 success: handlePoll, 
@@ -118,6 +123,7 @@ function startPoll() {
 		 timeout: 5000
 	       });
     })();
+    */
 }
 
 function channelURL(prefix, channel) {

@@ -13,6 +13,7 @@ from twisted.web.resource import Resource
 from twisted.web.static import File
 from twisted.web.client import getPage
 from twisted.web.util import redirectTo
+from websocket import WebSocketHandler, WebSocketSite
 from zope.interface import implements
 
 from connections import *
@@ -109,6 +110,13 @@ class APIPoller(Resource):
         d = request.notifyFinish()
         d.addErrback(ec.dead, request)
         return server.NOT_DONE_YET
+
+
+class APISocket(WebSocketHandler):
+    controllers = dict()
+
+    def frameReceived(self, frame):
+        print("Peer: {0}".format(self.transport.getPeer()))
 
 
 class APISession(Resource):
@@ -388,7 +396,6 @@ def start():
 
     rest_api = API()
     root.putChild('api', rest_api)
-    rest_api.putChild('poll', APIPoller())
     rest_api.putChild('session', APISession())
     rest_api.putChild('login', APILogin())
     rest_api.putChild('whoami', APIWhoAmI())
@@ -396,7 +403,8 @@ def start():
     irc_network = IRCNetwork()
     rest_api.putChild('networks', irc_network)
 
-    site = server.Site(root)
+    site = WebSocketSite(root)
+    site.addHandler('/api/websocket', APISocket)
     site.sessionFactory = LongSession
 
     reactor.listenTCP(8080, site)
