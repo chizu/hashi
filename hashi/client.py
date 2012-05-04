@@ -103,11 +103,6 @@ WHERE enabled = true AND user_email = %s AND servers.hostname = %s;
     def userRenamed(self, oldname, newname):
         self.publish.event("userRenamed", oldname, newname)
 
-    def msg(self, target, msg, length=None):
-        ret = irc.IRCClient.msg(self, target, msg, length)
-        self.publish.event("privmsg", self.nickname, target, msg)
-        return ret
-
     def privmsg(self, user, channel, msg):
         self.publish.event("privmsg", user, channel, msg)
 
@@ -176,7 +171,15 @@ FROM servers WHERE hostname = %s;"""
         elif command == 'msg':
             # Arguments are 'target message ...'
             target = command_args[0]
-            subject.msg(target, command_args[1], 500 - len(target))
+            msg = command_args[1]
+            subject.msg(target, msg, 500 - len(target))
+            subject.publish.event("privmsg", subject.nickname, target, msg)
+        elif command == 'action':
+            target = command_args[0]
+            msg = command_args[1]
+            # IRCClient.me prepends # erroneously
+            subject.ctcpMakeQuery(target, [('ACTION', command_args[1])])
+            subject.publish.event("action", subject.nickname, target, msg)
 
 
 class Hashi(object):
