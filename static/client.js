@@ -150,7 +150,7 @@ function channelInput(event) {
 }
 
 function switchChannelTab(event) {
-    scrollBottom(400);
+    scrollBottom(0);
     $(this).removeClass('warning');
 }
 
