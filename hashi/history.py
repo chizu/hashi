@@ -91,7 +91,8 @@ class History(object):
 VALUES (%s, %s, %s, %s, %s, %s, %s, timestamp 'epoch' + %s * INTERVAL '1 second');"""
         # Record each kind of message, with a fallback for unimplemented ones
         if kind == 'privmsg' or kind == 'action' or kind == 'notice'\
-                or kind == 'userJoined' or kind == 'userLeft':
+                or kind == 'userJoined' or kind == 'userLeft'\
+                or kind == 'userRenamed':
             source = NickIdentity(self, args[0]).id
             target = NickIdentity(self, args[1]).id
             cur.execute(record_sql,
