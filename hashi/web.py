@@ -373,7 +373,8 @@ ORDER BY events.id DESC LIMIT %s;"""
         #request.responseHeaders.addRawHeader("Content-Type", "application/json")
         message_json = json.loads(request.content.read())
         client_cmd = [session.email.encode('utf-8'),
-                      request.prepath[-3], 'msg',
+                      request.prepath[-3],
+                      message_json['kind'].encode('utf-8'),
                       self.name,
                       message_json['privmsg'].encode('utf-8')]
         print(client_cmd)

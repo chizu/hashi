@@ -130,10 +130,17 @@ function channelMessagesURL(hostname, channel) {
 
 function channelInput(event) {
     event.preventDefault();
+    var msg_body = $(event.data.id).val();
+    var msg_kind = 'msg';
+    if (msg_body.substring(0, 4) === '/me ') {
+	msg_body = msg_body.substring(4);
+	msg_kind = 'action';
+    }
     $.ajax({
 	type: 'POST',
 	url: event.data.url,
-	data: JSON.stringify({"privmsg":$(event.data.id).val()}),
+	data: JSON.stringify({"privmsg":msg_body,
+			      "kind":msg_kind}),
 	dataType: 'json',
 	contentType: 'application/json',
 	success: function () {
