@@ -191,6 +191,10 @@ function newChannelMessages(channel_messages, hostname, channel) {
 
     if (!tab_link.parent().hasClass('active')) {
 	tab_link.addClass('warning');
+	var server_tab_link = $('a[href$="#'+hostname_id+'"]');
+	if (!server_tab_link.parent().hasClass('active')) {
+	    server_tab_link.addClass('warning');
+	}
     }
 
     var irc_body = $(eid(channel_id)+' table.irc-body');
@@ -288,6 +292,7 @@ function switchServerTab() {
     $(this).parent().addClass('active');
     $('#servers .active').removeClass('active');
     $('#servers').find(hostname_id).addClass('active');
+    $(this).removeClass('warning');
 }
 
 function addServerTab(hostname) {

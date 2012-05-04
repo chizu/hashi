@@ -214,10 +214,10 @@ html, body {
     margin-left: -2px;
 }
 
-.subnav a.warning {
+.nav > li > a.warning {
     color: #f89406;
 }
 
-.subnav a.warning:hover {
+.nav > li > a.warning:hover {
     color: #c86400;
 }
