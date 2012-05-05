@@ -88,8 +88,8 @@ function serverControls(hostname) {
     return '<div class="subnav subnav-fixed"><ul class="nav nav-pills channels-nav"><li><a class="btn-primary" data-toggle="modal" href="#'+modal_id+'"><i class="icon-plus icon-white"/></a></li></ul></div><div class="tab-content"></div><div id="'+modal_id+'" class="modal fade hide"><div class="modal-header">Open a tab!<a class="close" data-dismiss="modal"><i class="icon-remove" /></a></div><div class="modal-body"><form class="form-inline"><input type="text" class="input channel-name" placeholder="Channel or User" /> <input type="text" class="input channel-key" placeholder="Key" /></form></div><div class="modal-footer"><a href="'+modal_url+'" class="btn btn-primary">Open</a></div></div>';
 }
 
-function handlePoll(data) {
-    $.each(data, function(index, msg) {
+function handleEvent(event) {
+    $.each([JSON.parse(event.data)], function(index, msg) {
 	if (msg["kind"] != "userQuit") {
 	    var nick = msg["args"][0].split('!')[0];
 	    var lines = [[msg["event_id"], nick, msg["args"][2], msg["kind"]]];
@@ -112,8 +112,9 @@ function startPoll() {
     // Poll for events forever!
     var socket = new WebSocket('wss://spicious.com:443/api/websocket');
     socket.onopen = function () {
-	socket.send("test");
+	socket.send(document.cookie);
     };
+    socket.onmessage = handleEvent;
     /*
     (function poll(){
 	$.ajax({ url: "/api/poll", 

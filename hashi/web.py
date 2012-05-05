@@ -33,6 +33,18 @@ def require_login(func):
     return wrapped
 
 
+def parse_cookies(cookie_text):
+    """Turn raw cookie text into a dictionary of values."""
+    cookies = {}
+    for cookie in cookie_text.split(';'):
+        try:
+            k, v = cookie.split('=', 1)
+            cookies[k] = v
+        except ValueError:
+            pass
+    return cookies
+
+
 class LongSession(server.Session):
     sessionTimeout = 60 * 60 * 24 * 7
 
@@ -62,36 +74,16 @@ class API(Resource):
 
 
 class EventController(ZmqSubConnection):
-    def __init__(self, email):
-        self.requests = list()
-        self.pending = list()
+    def __init__(self, email, websocket):
         self.email = email
+        self.websocket = websocket
         endpoint = ZmqEndpoint("connect", "tcp://127.0.0.1:9914")
         super(EventController, self).__init__(zmqfactory, endpoint)
         self.subscribe(self.email)
 
-    def listen(self, request):
-        self.requests.append(request)
-
-    def dead(self, err, request):
-        self.requests.remove(request)
-
     def gotMessage(self, message, tag):
-        if self.requests:
-            try:
-                reply = [json.loads(message[0])]
-                self.pending.extend(reply)
-                reply_json = json.dumps(self.pending)
-                for req in self.requests:
-                    req.write(reply_json)
-                    req.finish()
-            finally:
-                # Always empty the waiting requests
-                self.requests = list()
-                self.pending = list()
-        else:
-            self.pending.append(json.loads(message[0]))
-
+        reply = message[0]
+        self.websocket.transport.write(reply)
 
 class APIPoller(Resource):
     isLeaf = True
@@ -115,9 +107,29 @@ class APIPoller(Resource):
 class APISocket(WebSocketHandler):
     controllers = dict()
 
-    def frameReceived(self, frame):
-        print("Peer: {0}".format(self.transport.getPeer()))
+    def connectionMade(self):
+        self.email = None
 
+    def connectionLost(self, reason):
+        if self.email in APISocket.controllers:
+            APISocket.controllers.pop(self.email)
+        self.email = None
+
+    def frameReceived(self, frame):
+        if not self.email:
+            cookies = parse_cookies(frame)
+            if "TWISTED_SESSION" in cookies:
+                site_sessions = self.transport._request.site.sessions
+                session_key = cookies["TWISTED_SESSION"]
+                if session_key in site_sessions:
+                    email = site_sessions[session_key].email
+                    utf_email = email.encode('utf-8')
+                    ec = EventController(utf_email, self)
+                    APISocket.controllers[email] = ec
+                    self.email = email
+        else:
+            # In a valid session
+            print("Authenticated for {0}: {1}".format(self.email, frame))
 
 class APISession(Resource):
     isLeaf = True
