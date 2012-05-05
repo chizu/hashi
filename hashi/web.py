@@ -85,24 +85,6 @@ class EventController(ZmqSubConnection):
         reply = message[0]
         self.websocket.transport.write(reply)
 
-class APIPoller(Resource):
-    isLeaf = True
-    controllers = dict()
-
-    @require_login
-    def render_GET(self, request, session):
-        request.responseHeaders.addRawHeader("Content-Type",
-                                             "application/json")
-        email = session.email
-        if email not in APIPoller.controllers:
-            utf_email = email.encode('utf-8')
-            APIPoller.controllers[email] = EventController(utf_email)
-        ec = APIPoller.controllers[email]
-        ec.listen(request)
-        d = request.notifyFinish()
-        d.addErrback(ec.dead, request)
-        return server.NOT_DONE_YET
-
 
 class APISocket(WebSocketHandler):
     controllers = dict()

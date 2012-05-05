@@ -109,22 +109,12 @@ function handleEvent(event) {
 }
 
 function startPoll() {
-    // Poll for events forever!
+    // Poll for events
     var socket = new WebSocket('wss://spicious.com:443/api/websocket');
     socket.onopen = function () {
 	socket.send(document.cookie);
     };
     socket.onmessage = handleEvent;
-    /*
-    (function poll(){
-	$.ajax({ url: "/api/poll", 
-		 success: handlePoll, 
-		 dataType: "json",
-		 complete: poll,
-		 timeout: 5000
-	       });
-    })();
-    */
 }
 
 function channelURL(prefix, channel) {
