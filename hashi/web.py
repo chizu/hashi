@@ -77,13 +77,22 @@ class EventController(ZmqSubConnection):
     def __init__(self, email, websocket):
         self.email = email
         self.websocket = websocket
+        self.queued = list()
         endpoint = ZmqEndpoint("connect", "tcp://127.0.0.1:9914")
         super(EventController, self).__init__(zmqfactory, endpoint)
         self.subscribe(self.email)
 
+    def sync(self):
+        for each in self.queued:
+            self.websocket.transport.write(each)
+        self.queued = list()
+
     def gotMessage(self, message, tag):
-        reply = message[0]
-        self.websocket.transport.write(reply)
+        if self.websocket.session:
+            reply = message[0]
+            self.websocket.transport.write(reply)
+        else:
+            self.queued.append(message[0])
 
 
 class APISocket(WebSocketHandler):
@@ -91,11 +100,13 @@ class APISocket(WebSocketHandler):
 
     def connectionMade(self):
         self.email = None
+        self.session = None
 
     def connectionLost(self, reason):
         if self.email in APISocket.controllers:
-            APISocket.controllers.pop(self.email)
+            APISocket.controllers.pop(self.session)
         self.email = None
+        self.session = None
 
     def frameReceived(self, frame):
         if not self.email:
@@ -107,11 +118,14 @@ class APISocket(WebSocketHandler):
                     email = site_sessions[session_key].email
                     utf_email = email.encode('utf-8')
                     ec = EventController(utf_email, self)
-                    APISocket.controllers[email] = ec
+                    APISocket.controllers[session_key] = ec
                     self.email = email
+                    self.session = session_key
         else:
             # In a valid session
             print("Authenticated for {0}: {1}".format(self.email, frame))
+            if frame == "sync":
+                APISocket.controllers[self.session].sync()
 
 class APISession(Resource):
     isLeaf = True

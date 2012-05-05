@@ -55,7 +55,7 @@ function loggedIn(email) {
     $('.dropdown-toggle').dropdown();
     $('.logged-out').hide();
     $('.logged-in').show();
-    startPoll();
+    startPoll(false);
 }
 
 function loggedOut() {
@@ -108,18 +108,24 @@ function handleEvent(event) {
     });
 }
 
-function startPoll() {
+function startPoll(sync) {
     // Poll for events
     var socket = new WebSocket('wss://spicious.com:443/api/websocket');
     socket.onopen = function () {
 	socket.send(document.cookie);
+	if (sync) {
+	    console.log("WebSocket reconnecting.");
+	    socket.send("sync");
+	}
     };
     socket.onmessage = handleEvent;
     socket.onclose = function () {
 	console.log("WebSocket closed.");
+	startPoll(true);
     };
     socket.onerror = function () {
 	console.log("WebSocket error.");
+	startPoll(true);
     };
 }
 
@@ -282,7 +288,7 @@ function listChannels(hostname) {
     $('#'+hostname_id+'-channel-join .modal-footer a').click(joinChannel);
     $('#'+hostname_id+' .modal').modal('hide');
     $.getJSON(url, function (channel_list) {
-	$.each(channel_list, function(index, val) {
+	$.map(channel_list, function(val) {
 	    addChannelTab(hostname, val);
 	    refreshChannel(hostname, val);
 	});
@@ -309,7 +315,7 @@ function addServerTab(hostname) {
 function listServers() {
     $("#server-list tbody tr").remove();
     $.getJSON('/api/networks', function (server_list) {
-	$.each(server_list, function(index, val) {
+	$.map(server_list, function(val) {
 	    var cols = new Array();
 	    // Enabled server
 	    if (val[0]) {
