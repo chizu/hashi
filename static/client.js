@@ -115,6 +115,12 @@ function startPoll() {
 	socket.send(document.cookie);
     };
     socket.onmessage = handleEvent;
+    socket.onclose = function () {
+	console.log("WebSocket closed.");
+    };
+    socket.onerror = function () {
+	console.log("WebSocket error.");
+    };
 }
 
 function channelURL(prefix, channel) {
