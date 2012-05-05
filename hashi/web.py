@@ -24,7 +24,7 @@ def require_login(func):
     @wraps(func)
     def wrapped(self, request):
         session = request.getSession()
-        if hasattr(session, 'email'):
+        if hasattr(session, 'email') and session.email == 'chizu@spicious.com':
             return func(self, request, session)
         else:
             request.setResponseCode(401)
