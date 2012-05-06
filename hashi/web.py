@@ -327,7 +327,11 @@ class IRCChannel(Resource):
         if name == '':
             return self
         elif name == 'messages':
-            return IRCChannelMessages(self.name)
+            return IRCChannelMessages(self.name, self.server)
+        elif name == 'users':
+            return IRCChannelUsers(self.name, self.server)
+        elif name == 'topic':
+            return IRCChannelTopic(self.name, self.server)
         else:
             # Channel name has slashes, support a "multilevel" channel name.
             return IRCChannel(self.name + '/' + name, self.server)
@@ -359,9 +363,10 @@ class IRCChannel(Resource):
 
 class IRCChannelMessages(Resource):
     isLeaf = True
-    def __init__(self, name):
+    def __init__(self, name, server):
         Resource.__init__(self)
         self.name = name
+        self.server = server
 
     @require_login
     def render_GET(self, request, session):
@@ -389,7 +394,7 @@ ORDER BY events.id DESC LIMIT %s;"""
         #request.responseHeaders.addRawHeader("Content-Type", "application/json")
         message_json = json.loads(request.content.read())
         client_cmd = [session.email.encode('utf-8'),
-                      request.prepath[-3],
+                      self.server,
                       message_json['kind'].encode('utf-8'),
                       self.name,
                       message_json['privmsg'].encode('utf-8')]
@@ -398,6 +403,30 @@ ORDER BY events.id DESC LIMIT %s;"""
         return json.dumps(True)
 
 
+class IRCChannelUsers(Resource):
+    isLeaf = True
+    def __init__(self, name, server):
+        Resource.__init__(self)
+        self.name = name
+        self.server = server
+
+    @require_login
+    def render_GET(self, request, session):
+        return ""
+
+
+class IRCChannelTopic(Resource):
+    isLeaf = True
+    def __init__(self, name, server):
+        Resource.__init__(self)
+        self.name = name
+        self.server = server
+
+    @require_login
+    def render_GET(self, request, session):
+        return ""
+
+            
 def start():
     root = Hashioki()
     root.putChild('static', File('static'))
