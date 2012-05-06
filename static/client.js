@@ -55,7 +55,6 @@ function loggedIn(email) {
     $('.dropdown-toggle').dropdown();
     $('.logged-out').hide();
     $('.logged-in').show();
-    startPoll(false);
 }
 
 function loggedOut() {
@@ -245,11 +244,11 @@ function newChannelMessages(channel_messages, hostname, channel) {
 
 
 function refreshChannel(hostname, channel) {
-    $.getJSON(channelMessagesURL(hostname, channel), function (channel_messages) {
+    return $.getJSON(channelMessagesURL(hostname, channel), function (msgs) {
 	// Newest message before we reverse it
-	current_event = Math.max(channel_messages[0], current_event);
-	channel_messages.reverse();
-	newChannelMessages(channel_messages, hostname, channel);
+	current_event = Math.max(msgs[0], current_event);
+	msgs.reverse();
+	newChannelMessages(msgs, hostname, channel);
     });
 }
 
@@ -287,12 +286,13 @@ function listChannels(hostname) {
     $('#'+hostname_id).append(serverControls(hostname));
     $('#'+hostname_id+'-channel-join .modal-footer a').click(joinChannel);
     $('#'+hostname_id+' .modal').modal('hide');
-    $.getJSON(url, function (channel_list) {
-	$.map(channel_list, function(val) {
+    var deferred = $.getJSON(url, function (channel_list) {
+	return $.map(channel_list, function(val) {
 	    addChannelTab(hostname, val);
-	    refreshChannel(hostname, val);
+	    return refreshChannel(hostname, val);
 	});
     });
+    return deferred;
 }
 
 function switchServerTab() {
@@ -309,13 +309,12 @@ function addServerTab(hostname) {
     $('#servers-nav').append('<li><a href="#'+hostname_id+'">'+hostname+'</a></li>');
     $('#servers-nav a').click(switchServerTab);
     $('#servers').append('<div class="tab-pane content" id="'+hostname_id+'"></div>');
-    listChannels(hostname);
 }
 
 function listServers() {
     $("#server-list tbody tr").remove();
     $.getJSON('/api/networks', function (server_list) {
-	$.map(server_list, function(val) {
+	var promises = $.map(server_list, function(val) {
 	    var cols = new Array();
 	    // Enabled server
 	    if (val[0]) {
@@ -344,6 +343,10 @@ function listServers() {
 	    // Server configuration line
 	    $('#server-list > tbody:last').append('<tr>'+cols.join()+'</tr>');
 	    addServerTab(val[1]);
+	    return listChannels(val[1]);
+	});
+	$.when(promises).then(function () {
+	    startPoll(false);
 	});
     });
 }
