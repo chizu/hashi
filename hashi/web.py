@@ -103,8 +103,9 @@ class APISocket(WebSocketHandler):
         self.session = None
 
     def connectionLost(self, reason):
-        if self.email in APISocket.controllers:
-            APISocket.controllers.pop(self.session)
+        if self.session in APISocket.controllers:
+            ec = APISocket.controllers.pop(self.session)
+            ec.shutdown()
         self.email = None
         self.session = None
 
