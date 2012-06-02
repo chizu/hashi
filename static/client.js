@@ -89,7 +89,8 @@ function serverControls(hostname) {
 
 function handleEvent(event) {
     $.each([JSON.parse(event.data)], function(index, msg) {
-	if (msg["kind"] != "userQuit") {
+	// Filter out the two kinds of messages that need userlist state
+	if (msg["kind"] != "userQuit" && msg["kind"] != "userRenamed") {
 	    var nick = msg["args"][0].split('!')[0];
 	    var lines = [[msg["event_id"], nick, msg["args"][2], msg["kind"]]];
 	    var channel = msg["args"][1];
