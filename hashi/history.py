@@ -7,6 +7,8 @@ import psycopg2
 import zmq
 import json
 
+from connections import database_config
+
 
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
@@ -71,7 +73,7 @@ class History(object):
     """Interact with client history for a network."""
     def __init__(self, irc_network):
         print("called init")
-        self.sql = psycopg2.connect("dbname=hashi")
+        self.sql = psycopg2.connect(**database_config)
         self.irc_network = irc_network
         cur = self.sql.cursor()
         cur.execute("SELECT id FROM servers WHERE hostname = %s",
