@@ -1,15 +1,15 @@
 import types
 
 from zmq.core import constants
-import txZMQ
-from txZMQ import ZmqFactory, ZmqConnection
+import txzmq
+from txzmq import ZmqFactory, ZmqConnection
 from twisted.enterprise import adbapi
 
 dbpool = adbapi.ConnectionPool("psycopg2", database='hashi')
 zmqfactory = ZmqFactory()
 
 
-class ZmqPubConnection(txZMQ.ZmqPubConnection):
+class ZmqPubConnection(txzmq.ZmqPubConnection):
     def publish(self, message, tag=''):
         if isinstance(message, types.StringTypes):
             self.send(tag + '\0' + message)
@@ -18,7 +18,7 @@ class ZmqPubConnection(txZMQ.ZmqPubConnection):
             self.send(li)
 
 
-class ZmqSubConnection(txZMQ.ZmqSubConnection):
+class ZmqSubConnection(txzmq.ZmqSubConnection):
     def messageReceived(self, message):
         if isinstance(message, types.StringTypes):
             self.gotMessage(*reversed(message[0].split('\0', 1)))

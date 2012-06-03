@@ -6,7 +6,7 @@ from collections import defaultdict
 
 import unicodenazi
 from zmq.core import constants
-from txZMQ import ZmqEndpoint
+from txzmq import ZmqEndpoint
 from twisted.internet import protocol, reactor
 from twisted.internet.endpoints import TCP4ClientEndpoint, SSL4ClientEndpoint
 from twisted.internet.ssl import ClientContextFactory

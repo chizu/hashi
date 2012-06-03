@@ -6,7 +6,7 @@ from functools import wraps
 
 import unicodenazi
 from psycopg2 import IntegrityError, errorcodes
-from txZMQ import ZmqEndpoint
+from txzmq import ZmqEndpoint
 from twisted.internet import reactor
 from twisted.web import server
 from twisted.web.resource import Resource
