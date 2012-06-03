@@ -51,7 +51,39 @@ WHERE events.observer_email = %s AND servers.hostname = %s;
         event_publisher.send(send)
 
 
-class Client(irc.IRCClient):
+class NamesIRCClient(irc.IRCClient):
+    def __init__(self, *args, **kwargs):
+        self._namescallback = {}
+
+    def names(self, channel):
+        channel = channel.lower()
+        d = defer.Deferred()
+        if channel not in self._namescallback:
+            self._namescallback[channel] = ([], [])
+
+        self._namescallback[channel][0].append(d)
+        self.sendLine("NAMES %s" % channel)
+        return d
+
+    def irc_RPL_NAMREPLY(self, prefix, params):
+        channel = params[2].lower()
+        nicklist = params[3].split(' ')
+
+        if channel not in self._namescallback:
+            return
+
+        n = self._namescallback[channel][1]
+        n += nicklist
+
+    def irc_RPL_ENDOFNAMES(self, prefix, params):
+        channel = params[1].lower()
+        if channel not in self._namescallback:
+            return
+
+        callbacks, namelist = self._namescallback[channel]
+
+
+class Client(NamesIRCClient):
     @property
     def email(self):
         return self.factory.email
@@ -65,7 +97,7 @@ class Client(irc.IRCClient):
         return self.factory.network
 
     def signedOn(self):
-        self.channels = list()
+        self.channels = dict()
         self.publish = RemoteEventPublisher(self.network, self.nickname, self.email)
         self.publish.event("signedOn", self.nickname)
         def initial_join(l):
@@ -79,16 +111,23 @@ WHERE enabled = true AND user_email = %s AND servers.hostname = %s;
 """
         d = dbpool.runQuery(join_sql, (self.email, self.network))
         d.addCallback(initial_join)
-        
+
+    def got_names(self, nicklist, channel):
+        self.channels[channel]["users"] = nicklist
+
+    def topicUpdated(self, user, channel, newTopic):
+        self.channels[channel]["topic"] = (user, newTopic)
+
     def joined(self, channel):
-        self.channels.append(channel)
+        self.channels[channel] = {"users":None, "topic":None}
+        self.names(channel).addCallback(self.got_names, channel)
         self.publish.event("joined", channel)
 
     def userJoined(self, user, channel):
         self.publish.event("userJoined", user, channel)
 
     def left(self, channel):
-        self.channels.remove(channel)
+        self.channels.pop(channel)
         self.publish.event("left", channel)
 
     def userLeft(self, user, channel):
