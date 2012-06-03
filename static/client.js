@@ -179,6 +179,7 @@ function addChannelTab(hostname, channel) {
 
 	link = $(document.createElement('a'));
 	link.attr('href', '#'+channel_id);
+	link.attr('data-target', '#'+channel_id.replace(/([#:|.])/g, '\\$1'));
 	link.attr('data-toggle', 'tab');
 	link.text(String(channel));
 	link.bind('shown', switchChannelTab);
