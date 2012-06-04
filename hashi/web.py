@@ -421,7 +421,9 @@ class IRCChannelUsers(Resource):
         names_sql = """SELECT args
 FROM events 
 JOIN identities on target = identities.id
-WHERE kind = 'names' and token = %s"""
+WHERE kind = 'names' and token = %s
+ORDER BY timestamp
+LIMIT 1"""
         d = dbpool.runQuery(names_sql, (self.name,))
         d.addCallback(render_messages)
         return server.NOT_DONE_YET
