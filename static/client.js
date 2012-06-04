@@ -110,7 +110,15 @@ function handleEvent(event) {
 
 function startPoll(sync) {
     // Poll for events
-    var socket = new WebSocket('wss://spicious.com:443/api/websocket');
+    if (window.location.protocol = 'https:' || window.location.port) {
+	var ws_protocol = 'wss';
+	var ws_port = window.location.port || "443";
+    }
+    else {
+	var ws_protocol = 'ws';
+	var ws_port = "80";
+    }
+    var socket = new WebSocket(ws_protocol+'://'+window.location.hostname+':'+ws_port+'/api/websocket');
     socket.onopen = function () {
 	socket.send(document.cookie);
 	if (sync) {
