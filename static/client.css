@@ -216,3 +216,9 @@ html, body {
 .nav > li > a.warning:hover {
     color: #c86400;
 }
+
+.left-grab {
+    position: fixed;
+    top: 50%;
+    right: -12px;
+}

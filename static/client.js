@@ -152,6 +152,10 @@ function channelMessagesURL(hostname, channel) {
     return channelURL('/api/networks/'+hostname, channel)+'/messages';
 }
 
+function channelUsersURL(hostname, channel) {
+    return channelURL('/api/networks/'+hostname, channel)+'/users';
+}
+
 function channelInput(event) {
     event.preventDefault();
     var msg_body = $(event.data.id).val();
@@ -182,6 +186,40 @@ function channelID(hostname_id, channel) {
     return hostname_id + '-' + String(channel).replace('/', '-slash-');
 }
 
+function getUserList(event) {
+    var button = $(this);
+    if (button.hasClass('open')) {
+	button.removeClass('open');
+	button.siblings('ul').remove();
+	button.siblings('.irc-body').animate({width: "100%"});
+	button.animate({right: "-12px"});
+    }
+    else {
+	$.getJSON(channelUsersURL(event.data.hostname, event.data.channel), function (users) {
+	    displayUsers(button, users);
+	});
+    }
+}
+
+function displayUsers(button, users) {
+    ul = $(document.createElement('ul'));
+    $.each(users, function (n, user) {
+	li = $(document.createElement('li'));
+	li.text(user);
+	ul.append(li);
+    });
+    ul.css('list-style-type', 'none');
+    ul.css('position', 'fixed');
+    ul.css('top', '80px');
+    ul.css('right', '0');
+    ul.css('width', '0%');
+    button.parent().append(ul);
+    button.addClass('open');
+    button.siblings('.irc-body').animate({width: "80%"});
+    ul.animate({width: "20%"});
+    button.animate({right: "20%"});
+}
+
 function addChannelTab(hostname, channel) {
     var hostname_id = hostnameId(hostname);
     var channel_id = channelID(hostname_id, channel);
@@ -206,6 +244,13 @@ function addChannelTab(hostname, channel) {
 	    .append('<div id="'+channel_id+'" class="tab-pane"><table class="irc-body"></table></div>');
 	$(eid(channel_id)).append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
 	$(eid(channel_id)).children('form').submit(options, channelInput);
+	users_handle = $(document.createElement('button'))
+	users_handle.addClass('left-grab');
+	users_handle.addClass('btn').addClass('btn-info');
+	users_handle.append('<i class="icon-chevron-left icon-white"></i>');
+	users_handle.click({hostname: hostname, channel: channel},
+			   getUserList);
+	$(eid(channel_id)).append(users_handle);
     }
 }
 
@@ -305,7 +350,7 @@ function listChannels(hostname) {
     $('#'+hostname_id+' .modal').modal('hide');
     var deferred = $.getJSON(url, function (channel_list) {
 	return $.map(channel_list, function(val) {
-	    addChannelTab(hostname, val);
+	    addChannelTab(hostname, val[0]);
 	    return refreshChannel(hostname, val);
 	});
     });
