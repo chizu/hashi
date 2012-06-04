@@ -1,5 +1,18 @@
 var current_event = 0;
 
+// Decide the websocket url at load
+var ws_protocol = 'ws';
+if (window.location.protocol == 'https:') {
+    ws_protocol = 'wss';
+}
+if (window.location.port) {
+    var ws_url = ws_protocol+'://'+window.location.hostname+':'+window.location.port+'/api/websocket';
+}
+else {
+    var ws_url = ws_protocol+'://'+window.location.hostname+'/api/websocket';
+}
+var socket = null;
+
 // hashCode and intToARGB borrowed from http://stackoverflow.com/a/3426956
 function hashCode(str) { // java String#hashCode
     var hash = 0;
@@ -108,19 +121,9 @@ function handleEvent(event) {
     });
 }
 
+// Poll for events
 function startPoll(sync) {
-    // Poll for events
-    var ws_protocol = 'ws';
-    if (window.location.protocol == 'https:') {
-	ws_protocol = 'wss';
-    }
-    if (window.location.port) {
-	var ws_url = ws_protocol+'://'+window.location.hostname+':'+window.location.port+'/api/websocket';
-    }
-    else {
-	var ws_url = ws_protocol+'://'+window.location.hostname+'/api/websocket';
-    }
-    var socket = new WebSocket(ws_url);
+    socket = new WebSocket(ws_url);
     console.log("WebSocket connecting to: " + ws_url);
     socket.onopen = function () {
 	console.log("WebSocket connected.");
