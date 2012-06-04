@@ -98,7 +98,12 @@ VALUES (%s, %s, %s, %s, %s, %s, %s, timestamp 'epoch' + %s * INTERVAL '1 second'
             source = NickIdentity(self, args[0]).id
             target = NickIdentity(self, args[1]).id
             cur.execute(record_sql,
-                        (event_id, self.id, source, target, args[2:], 
+                        (event_id, self.id, source, target, args[2:],
+                         email, kind, timestamp))
+        elif kind == 'names':
+            target = NickIdentity(self, args[0]).id
+            cur.execute(record_sql,
+                        (event_id, self.id, None, target, args[1:],
                          email, kind, timestamp))
         else:
             # No formatter, stuff it all into the args column (to prevent loss)

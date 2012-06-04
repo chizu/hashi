@@ -7,7 +7,7 @@ from collections import defaultdict
 import unicodenazi
 from zmq.core import constants
 from txzmq import ZmqEndpoint
-from twisted.internet import protocol, reactor
+from twisted.internet import protocol, reactor, defer
 from twisted.internet.endpoints import TCP4ClientEndpoint, SSL4ClientEndpoint
 from twisted.internet.ssl import ClientContextFactory
 from twisted.words.protocols import irc
@@ -82,6 +82,11 @@ class NamesIRCClient(irc.IRCClient):
 
         callbacks, namelist = self._namescallback[channel]
 
+        for cb in callbacks:
+            cb.callback(namelist)
+
+        del(self._namescallback[channel])
+
 
 class Client(NamesIRCClient):
     @property
@@ -113,7 +118,9 @@ WHERE enabled = true AND user_email = %s AND servers.hostname = %s;
         d.addCallback(initial_join)
 
     def got_names(self, nicklist, channel):
+        print("Got {0} nicklist {1}".format(channel, nicklist))
         self.channels[channel]["users"] = nicklist
+        self.publish.event("names", channel, *nicklist)
 
     def topicUpdated(self, user, channel, newTopic):
         self.channels[channel]["topic"] = (user, newTopic)
@@ -219,6 +226,9 @@ FROM servers WHERE hostname = %s;"""
             # IRCClient.me prepends # erroneously
             subject.ctcpMakeQuery(target, [('ACTION', command_args[1])])
             subject.publish.event("action", subject.nickname, target, msg)
+        elif command == 'names':
+            channel = command_args[0]
+            subject.names(channel).addCallback(subject.got_names, channel)
 
 
 class Hashi(object):
