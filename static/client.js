@@ -110,16 +110,17 @@ function handleEvent(event) {
 
 function startPoll(sync) {
     // Poll for events
-    if (window.location.protocol = 'https:' || window.location.port) {
-	var ws_protocol = 'wss';
-	var ws_port = window.location.port || "443";
+    var ws_protocol = 'ws';
+    var ws_port = '80';
+    if (window.location.protocol == 'https:' || window.location.port) {
+	ws_protocol = 'wss';
+	ws_port = window.location.port || '443';
     }
-    else {
-	var ws_protocol = 'ws';
-	var ws_port = "80";
-    }
-    var socket = new WebSocket(ws_protocol+'://'+window.location.hostname+':'+ws_port+'/api/websocket');
+    var ws_url = ws_protocol+'://'+window.location.hostname+':'+ws_port+'/api/websocket';
+    var socket = new WebSocket(ws_url);
+    console.log("WebSocket connecting to: " + ws_url);
     socket.onopen = function () {
+	console.log("WebSocket connected.");
 	socket.send(document.cookie);
 	if (sync) {
 	    console.log("WebSocket reconnecting.");
