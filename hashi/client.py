@@ -13,6 +13,7 @@ from twisted.internet.ssl import ClientContextFactory
 from twisted.words.protocols import irc
 
 from connections import *
+from db import dbpool
 
 e = ZmqEndpoint("connect", "tcp://127.0.0.1:9913")
 event_publisher = ZmqPushConnection(zmqfactory, "client", e)

@@ -17,6 +17,7 @@ from websocket import WebSocketHandler, WebSocketSite
 from zope.interface import implements
 
 from connections import *
+from db import dbpool
 irc_end = ZmqEndpoint("connect", "tcp://127.0.0.1:9912")
 irc_client = ZmqPushConnection(zmqfactory, "hashi-web", irc_end)
 
