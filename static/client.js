@@ -254,6 +254,18 @@ function addChannelTab(hostname, channel) {
     }
 }
 
+function expandImage(event) {
+    if ($(this).hasClass('active')) {
+	$(this).next().remove();
+    }
+    else {
+	image = $(document.createElement('img'));
+	image.attr('src', $(this).prev().attr('href'));
+	$(this).after(image);
+    }
+    $(this).button('toggle');
+}
+
 function newChannelMessages(channel_messages, hostname, channel) {
     var hostname_id = hostnameId(hostname);
     var channel_id = channelID(hostname_id, channel);
@@ -288,6 +300,14 @@ function newChannelMessages(channel_messages, hostname, channel) {
 	    msg_col.text(String(val[2]));
 	    msg_col.html(msg_col.html().replace(url_exp, '<a href="$1">$1</a>'));
 	}
+	button = $(document.createElement('button'));
+	button.button();
+	button.append('<span class="caret"></span>');
+	button.addClass('btn');
+	button.addClass('btn-info');
+	button.addClass('btn-mini');
+	button.click(expandImage);
+	msg_col.children('a[href*="jpg"], a[href*="png"]').after(button);
 	nick_text = String(val[1]);
 	nick_color = "#"+intToDark(hashCode(nick_text));
 	row.css("color", nick_color);
