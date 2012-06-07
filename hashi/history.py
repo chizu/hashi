@@ -7,7 +7,7 @@ import psycopg2
 import zmq
 import json
 
-from connections import database_config
+from db import database_config
 
 
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)

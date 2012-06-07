@@ -5,10 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from twisted.enterprise import adbapi
 
 
-database_config = {"database":"hashi",
-                   "hostname":"localhost",
-                   "user":"hashi"
-                   "password":""}
+database_config = {"database":"hashi"}
 dbpool = adbapi.ConnectionPool("psycopg2", **database_config)
 
 
@@ -22,9 +19,9 @@ def create():
 
 Base = declarative_base()
 
-
+"""
 class Users(Base):
-    """Hashi users."""
+    "Hashi users."
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     email = Column(String, nullable=False)
@@ -46,7 +43,7 @@ class Servers(Base):
     
 
 class Identities(Base):
-    """IRC users."""
+    "IRC users."
     __tablename__ = 'identities'
     id = Column(Integer, primary_key=True)
 
@@ -59,7 +56,8 @@ class Events(Base):
     target = Column(Integer, ForeignKey("identities.id"))
     args = Column(ARRAY(String))
     timestamp = Column(DateTime, nullable=False, server_default=func.now())
-    observer_id = Column(Users, 
+    observer_id = Column(String)
     kind = Column(Enum('notice', 'userRenamed', 'userQuit', 'action',
                        'userLeft', 'privmsg', 'userJoined', 'signedOn',
                        'userKicked', 'names', 'joined'))
+"""
