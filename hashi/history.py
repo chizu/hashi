@@ -81,9 +81,6 @@ class History(object):
         result = cur.fetchone()
         if result:
             self.id = result[0]
-        #else:
-        #    cur.execute("INSERT INTO networks (name) VALUES (%s)",
-        #                (irc_network,))
         # Done with setup, commit
         self.sql.commit()
 

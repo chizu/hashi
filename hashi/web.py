@@ -273,8 +273,8 @@ class IRCServer(Resource):
         def render_channels(l):
             request.write(json.dumps(l))
             request.finish()
-        chan_sql = """SELECT name FROM channel_configs 
-JOIN servers ON channel_configs.server_id = servers.id
+        chan_sql = """SELECT name FROM channels 
+JOIN servers ON channels.server_id = servers.id
 WHERE user_email = %s AND hostname = %s
 ORDER BY name;"""
         d = dbpool.runQuery(chan_sql, (session.email,self.name));
@@ -356,7 +356,7 @@ class IRCChannel(Resource):
             key = None
         irc_client.send(client_cmd)
         # Save to the database
-        d = dbpool.runOperation("INSERT INTO channel_configs (user_email, name, server_id, key) VALUES (%s, %s, (SELECT id FROM servers WHERE hostname = %s), %s)",
+        d = dbpool.runOperation("INSERT INTO channels (user_email, name, server_id, key) VALUES (%s, %s, (SELECT id FROM servers WHERE hostname = %s), %s)",
                                 (email, self.name, self.server, key))
         def finished(result):
             request.write(json.dumps(True))

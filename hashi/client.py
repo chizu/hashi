@@ -111,8 +111,8 @@ class Client(NamesIRCClient):
                 self.join(channel[0], channel[1] or None)
         # Join channels
         join_sql = """SELECT name, key
-FROM channel_configs
-JOIN servers ON (servers.id = channel_configs.server_id)
+FROM channels
+JOIN servers ON (servers.id = channels.server_id)
 WHERE enabled = true AND user_email = %s AND servers.hostname = %s;
 """
         d = dbpool.runQuery(join_sql, (self.email, self.network))
