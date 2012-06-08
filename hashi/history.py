@@ -97,7 +97,7 @@ VALUES (%s, %s, %s, %s, %s, %s, %s, timestamp 'epoch' + %s * INTERVAL '1 second'
             cur.execute(record_sql,
                         (event_id, self.id, source, target, args[2:],
                          email, kind, timestamp))
-        elif kind == 'names':
+        elif kind == 'names' or kind == 'topic':
             target = NickIdentity(self, args[0]).id
             cur.execute(record_sql,
                         (event_id, self.id, None, target, args[1:],

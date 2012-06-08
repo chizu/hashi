@@ -125,10 +125,12 @@ WHERE enabled = true AND user_email = %s AND servers.hostname = %s;
 
     def topicUpdated(self, user, channel, newTopic):
         self.channels[channel]["topic"] = (user, newTopic)
+        self.publish.event("topic", channel, newTopic)
 
     def joined(self, channel):
         self.channels[channel] = {"users":None, "topic":None}
         self.names(channel).addCallback(self.got_names, channel)
+        self.topic(channel)
         self.publish.event("joined", channel)
 
     def userJoined(self, user, channel):

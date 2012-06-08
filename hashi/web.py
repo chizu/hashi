@@ -334,8 +334,6 @@ class IRCChannel(Resource):
             return IRCChannelUsers(self.name, self.server)
         elif name == 'topic':
             return IRCChannelTopic(self.name, self.server)
-        elif name == 'debug':
-            return IRCChannelDebug(self.name, self.server)
         else:
             # Channel name has slashes, support a "multilevel" channel name.
             return IRCChannel(self.name + '/' + name, self.server)
@@ -416,17 +414,17 @@ class IRCChannelUsers(Resource):
 
     @require_login
     def render_GET(self, request, session):
-        def render_messages(l):
+        def render_names(l):
             request.write(json.dumps(l[0][0]))
             request.finish()
         names_sql = """SELECT args
-FROM events 
+FROM events
 JOIN identities on target = identities.id
 WHERE kind = 'names' and token = %s
 ORDER BY timestamp
 LIMIT 1"""
         d = dbpool.runQuery(names_sql, (self.name,))
-        d.addCallback(render_messages)
+        d.addCallback(render_names)
         return server.NOT_DONE_YET
 
 
@@ -439,23 +437,18 @@ class IRCChannelTopic(Resource):
 
     @require_login
     def render_GET(self, request, session):
-        return ""
-
-
-class IRCChannelDebug(Resource):
-    isLeaf = True
-    def __init__(self, name, server):
-        Resource.__init__(self)
-        self.name = name
-        self.server = server
-
-    @require_login
-    def render_GET(self, request, session):
-        email = session.email
-        client_cmd = [email.encode("utf-8"),
-                      self.server, "names",
-                      self.name.encode("utf-8")]
-        return "Ran names."
+        def render_topic(l):
+            request.write(json.dumps(l[0][0]))
+            request.finish()
+        topic_sql = """SELECT args
+FROM events
+JOIN identities on target = identities.id
+WHERE kind = 'topic' and token = %s
+ORDER BY timestamp
+LIMIT 1"""
+        d = dbpool.runQuery(topic_sql, (self.name,))
+        d.addCallback(render_topic)
+        return server.NOT_DONE_YET
 
             
 def start():
