@@ -103,7 +103,7 @@ class Client(NamesIRCClient):
         return self.factory.network
 
     def signedOn(self):
-        self.channels = dict()
+        self.channels = list()
         self.publish = RemoteEventPublisher(self.network, self.nickname, self.email)
         self.publish.event("signedOn", self.nickname)
         def initial_join(l):
@@ -120,15 +120,13 @@ WHERE enabled = true AND user_email = %s AND servers.hostname = %s;
 
     def got_names(self, nicklist, channel):
         print("Got {0} nicklist {1}".format(channel, nicklist))
-        self.channels[channel]["users"] = nicklist
         self.publish.event("names", channel, *nicklist)
 
     def topicUpdated(self, user, channel, newTopic):
-        self.channels[channel]["topic"] = (user, newTopic)
         self.publish.event("topic", channel, newTopic)
 
     def joined(self, channel):
-        self.channels[channel] = {"users":None, "topic":None}
+        self.channels.append(channel)
         self.names(channel).addCallback(self.got_names, channel)
         self.topic(channel)
         self.publish.event("joined", channel)
