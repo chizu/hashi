@@ -94,9 +94,13 @@ VALUES (%s, %s, %s, %s, %s, %s, %s, timestamp 'epoch' + %s * INTERVAL '1 second'
                 or kind == 'userRenamed':
             source = NickIdentity(self, args[0]).id
             target = NickIdentity(self, args[1]).id
-            cur.execute(record_sql,
-                        (event_id, self.id, source, target, args[2:],
-                         email, kind, timestamp))
+            try:
+                cur.execute(record_sql,
+                            (event_id, self.id, source, target, args[2:],
+                             email, kind, timestamp))
+            except psycopg2.DataError:
+                # Unicode errors that should be handled better
+                pass
         elif kind == 'names' or kind == 'topic':
             target = NickIdentity(self, args[0]).id
             cur.execute(record_sql,
