@@ -203,7 +203,7 @@ class HashiController(ZmqPullConnection):
             command_args = None
         subject = self.hashi.clients[user]
         # If there's a server specified, pick that server here
-        if server != "global":
+        if server != "global" and command != "connect":
             subject = subject[server]
         # Otherwise, the iterable subject means for all servers
         if command == 'connect':
