@@ -382,12 +382,20 @@ JOIN events on (events.target = identities.id)
 JOIN identities as source_identities on (events.source = source_identities.id)
 WHERE identities.token = %s
 AND events.observer_email = %s
-ORDER BY events.id DESC LIMIT %s;"""
+"""
+        query_args = [self.name, session.email]
+        before_sql = "\nAND events.id < %s"
+        count_sql = "\nORDER BY events.id DESC LIMIT %s;"
+        if "before" in request.args:
+            before = int(request.args["before"])
+            msg_sql += before_sql
         if "count" in request.args:
             count = max(0, min(int(request.args["count"][0]), 1000))
         else:
-            count = 50
-        d = dbpool.runQuery(msg_sql, (self.name, session.email, count))
+            count = 100
+        msg_sql += count_sql
+        query_args.append(count)
+        d = dbpool.runQuery(msg_sql, query_args)
         d.addCallback(render_messages)
         return server.NOT_DONE_YET
 
