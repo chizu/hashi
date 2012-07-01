@@ -4,7 +4,6 @@ import json
 import time
 from collections import defaultdict
 
-import unicodenazi
 from zmq.core import constants
 from txzmq import ZmqEndpoint
 from twisted.internet import protocol, reactor, defer

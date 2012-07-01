@@ -2,7 +2,6 @@
 import time
 from collections import namedtuple
 
-import unicodenazi
 import psycopg2
 import zmq
 import json
