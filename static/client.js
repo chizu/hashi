@@ -179,7 +179,6 @@ function channelInput(event) {
 
 function switchChannelTab(event) {
     scrollBottom(0);
-    $(this).removeClass('warning');
 }
 
 function channelID(hostname_id, channel) {
@@ -269,16 +268,6 @@ function expandImage(event) {
 function newChannelMessages(channel_messages, hostname, channel) {
     var hostname_id = hostnameId(hostname);
     var channel_id = channelID(hostname_id, channel);
-    var tab_link = $('a[href$="'+channel_id+'"]');
-
-    if (!tab_link.parent().hasClass('active')) {
-	tab_link.addClass('warning');
-	var server_tab_link = $('a[href$="#'+hostname_id+'"]');
-	if (!server_tab_link.parent().hasClass('active')) {
-	    server_tab_link.addClass('warning');
-	}
-    }
-
     var irc_body = $(eid(channel_id)+' table.irc-body');
 
     if ($(window).scrollTop() + $(window).height() == $(document).height()) {
@@ -383,7 +372,6 @@ function switchServerTab() {
     $(this).parent().addClass('active');
     $('#servers .active').removeClass('active');
     $('#servers').find(hostname_id).addClass('active');
-    $(this).removeClass('warning');
 }
 
 function addServerTab(hostname) {
