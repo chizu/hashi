@@ -1,5 +1,19 @@
 var current_event = 0;
+
 var servers = new Object();
+
+function Channel(name) {
+    this.name = name;
+}
+
+function Server(hostname, port, ssl, nick) {
+    this.hostname = hostname;
+    this.enabled = true;
+    this.port = port;
+    this.ssl = ssl;
+    this.nick = nick;
+    this.channels = new Object();
+}
 
 // Decide the websocket url at load
 var ws_protocol = 'ws';
@@ -352,20 +366,24 @@ function joinChannel(event) {
     }
 }
 
-function listChannels(hostname) {
+function updateChannels(hostname) {
     var url = '/api/networks/'+hostname;
-    var hostname_id = hostnameId(hostname);
-    $('#'+hostname_id).append(serverControls(hostname));
-    $('#'+hostname_id+'-channel-join .modal-footer a').click(joinChannel);
-    $('#'+hostname_id+' .modal').modal('hide');
     var deferred = $.getJSON(url, function (channel_list) {
 	return $.map(channel_list, function(val) {
-	    servers[hostname].channels[val[0]] = new Object();
+	    servers[hostname].channels[val[0]] = new Channel(val[0]);
 	    addChannelTab(hostname, val[0]);
 	    return refreshChannel(hostname, val);
 	});
     });
     return deferred;
+}
+
+function listChannels(hostname) {
+    var hostname_id = hostnameId(hostname);
+    $('#'+hostname_id).append(serverControls(hostname));
+    $('#'+hostname_id+'-channel-join .modal-footer a').click(joinChannel);
+    $('#'+hostname_id+' .modal').modal('hide');
+    return updateChannels(hostname);
 }
 
 function switchServerTab() {
@@ -388,13 +406,7 @@ function updateServers() {
     $.getJSON('/api/networks', function (server_list) {
 	$.map(server_list, function (server) {
 	    // Overwrites everything, should probably try to sync this
-	    server_obj = new Object();
-	    server_obj.enabled = true;
-	    server_obj.hostname = server[1];
-	    server_obj.port = server[2];
-	    server_obj.ssl = server[3];
-	    server_obj.nick = server[4];
-	    server_obj.channels = new Object();
+	    server_obj = new Server(server[1], server[2], server[3], server[4]);
 	    servers[server_obj.hostname] = server_obj;
 	});
 	$.when(listServers()).then(function () {
