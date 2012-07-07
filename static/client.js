@@ -1,4 +1,5 @@
 var current_event = 0;
+var servers = new Object();
 
 // Decide the websocket url at load
 var ws_protocol = 'ws';
@@ -63,7 +64,7 @@ function loggedIn(email) {
     $('#new-server').modal('hide');
     $('#logout').bind('click', logout);
     $('#new-server').submit(addServer);
-    listServers();
+    updateServers();
     $('#usermenu .dropdown-toggle').html(email + '<b class="caret" />');
     $('.dropdown-toggle').dropdown();
     $('.logged-out').hide();
@@ -359,6 +360,7 @@ function listChannels(hostname) {
     $('#'+hostname_id+' .modal').modal('hide');
     var deferred = $.getJSON(url, function (channel_list) {
 	return $.map(channel_list, function(val) {
+	    servers[hostname].channels[val[0]] = new Object();
 	    addChannelTab(hostname, val[0]);
 	    return refreshChannel(hostname, val);
 	});
@@ -381,43 +383,58 @@ function addServerTab(hostname) {
     $('#servers').append('<div class="tab-pane content" id="'+hostname_id+'"></div>');
 }
 
-function listServers() {
-    $("#server-list tbody tr").remove();
+function updateServers() {
+    // Update client side state for servers
     $.getJSON('/api/networks', function (server_list) {
-	var promises = $.map(server_list, function(val) {
-	    var cols = new Array();
-	    // Enabled server
-	    if (val[0]) {
-		cols[0] = '<td><input type="checkbox" class="server-disable" checked /></td>';
-	    }
-	    else {
-		cols[0] = '<td><input type="checkbox" class="server-enable" /></td>';
-	    }
-	    cols[1] = '<td>'+val[1]+'</td>';
-	    cols[2] = '<td>'+val[2]+'</td>';
-	    // SSL configuration
-	    if (val[3]) {
-		// Remove disabled when this is implemented
-		cols[3] = '<td><a class="btn btn-small btn-success disabled"><i class="icon-lock icon-white" /> Enabled</a></td>';
-	    }
-	    else {
-		cols[3] = '<td><a class="btn btn-small btn-danger disabled"><i class="icon-ban-circle icon-white" /> Disabled</a></td>';
-	    }
-	    // Nick configured yet?
-	    if (val[4]) {
-		cols[4] = '<td><input type="text" class="disabled" value="'+val[4]+'" /></td>';
-	    }
-	    else {
-		cols[4] = '<td><input type="text" class="disabled" /></td>';
-	    }
-	    // Server configuration line
-	    $('#server-list > tbody:last').append('<tr>'+cols.join()+'</tr>');
-	    addServerTab(val[1]);
-	    return listChannels(val[1]);
+	$.map(server_list, function (server) {
+	    // Overwrites everything, should probably try to sync this
+	    server_obj = new Object();
+	    server_obj.enabled = true;
+	    server_obj.hostname = server[1];
+	    server_obj.port = server[2];
+	    server_obj.ssl = server[3];
+	    server_obj.nick = server[4];
+	    server_obj.channels = new Object();
+	    servers[server_obj.hostname] = server_obj;
 	});
-	$.when(promises).then(function () {
+	$.when(listServers()).then(function () {
 	    startPoll(false);
 	});
+    });
+}
+
+function listServers() {
+    $("#server-list tbody tr").remove();
+    return $.map(servers, function(server) {
+	var cols = new Array();
+	// Enabled server
+	if (server.enabled) {
+	    cols[0] = '<td><input type="checkbox" class="server-disable" checked /></td>';
+	}
+	else {
+	    cols[0] = '<td><input type="checkbox" class="server-enable" /></td>';
+	}
+	cols[1] = '<td>'+server.hostname+'</td>';
+	cols[2] = '<td>'+server.port+'</td>';
+	// SSL configuration
+	if (server.ssl) {
+	    // Remove disabled when this is implemented
+	    cols[3] = '<td><a class="btn btn-small btn-success disabled"><i class="icon-lock icon-white" /> Enabled</a></td>';
+	}
+	else {
+	    cols[3] = '<td><a class="btn btn-small btn-danger disabled"><i class="icon-ban-circle icon-white" /> Disabled</a></td>';
+	}
+	// Nick configured yet?
+	if (server.nick) {
+	    cols[4] = '<td><input type="text" class="disabled" value="'+server.nick+'" /></td>';
+	}
+	else {
+	    cols[4] = '<td><input type="text" class="disabled" /></td>';
+	}
+	// Server configuration line
+	$('#server-list > tbody:last').append('<tr>'+cols.join()+'</tr>');
+	addServerTab(server.hostname);
+	return listChannels(server.hostname);
     });
 }
 
