@@ -4,6 +4,7 @@ var servers = new Object();
 
 function Channel(name) {
     this.name = name;
+    this.users = new Object();
 }
 
 function Server(hostname, port, ssl, nick) {
@@ -78,7 +79,9 @@ function loggedIn(email) {
     $('#new-server').modal('hide');
     $('#logout').bind('click', logout);
     $('#new-server').submit(addServer);
-    updateServers();
+    updateServers().pipe(listServers).done(function () {
+	startPoll(false);
+    });
     $('#usermenu .dropdown-toggle').html(email + '<b class="caret" />');
     $('.dropdown-toggle').dropdown();
     $('.logged-out').hide();
@@ -200,38 +203,10 @@ function channelID(hostname_id, channel) {
     return hostname_id + '-' + String(channel).replace('/', '-slash-');
 }
 
-function getUserList(event) {
-    var button = $(this);
-    if (button.hasClass('open')) {
-	button.removeClass('open');
-	button.siblings('ul').remove();
-	button.siblings('.irc-body').animate({width: "100%"});
-	button.animate({right: "-12px"});
-    }
-    else {
-	$.getJSON(channelUsersURL(event.data.hostname, event.data.channel), function (users) {
-	    displayUsers(button, users);
-	});
-    }
-}
-
-function displayUsers(button, users) {
-    ul = $(document.createElement('ul'));
-    $.each(users, function (n, user) {
-	li = $(document.createElement('li'));
-	li.text(user);
-	ul.append(li);
+function refreshUserList(hostname, channel) {
+    return $.getJSON(channelUsersURL(hostname, channel), function (users) {
+	servers[hostname].channels[channel].users = users;
     });
-    ul.css('list-style-type', 'none');
-    ul.css('position', 'fixed');
-    ul.css('top', '80px');
-    ul.css('right', '0');
-    ul.css('width', '0%');
-    button.parent().append(ul);
-    button.addClass('open');
-    button.siblings('.irc-body').animate({width: "80%"});
-    ul.animate({width: "20%"});
-    button.animate({right: "20%"});
 }
 
 function addChannelTab(hostname, channel) {
@@ -258,12 +233,12 @@ function addChannelTab(hostname, channel) {
 	    .append('<div id="'+channel_id+'" class="tab-pane"><table class="irc-body"></table></div>');
 	$(eid(channel_id)).append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
 	$(eid(channel_id)).children('form').submit(options, channelInput);
-	users_handle = $(document.createElement('button'))
+	users_handle = $(document.createElement('div'))
 	users_handle.addClass('left-grab');
 	users_handle.addClass('btn').addClass('btn-info');
 	users_handle.append('<i class="icon-chevron-left icon-white"></i>');
 	users_handle.click({hostname: hostname, channel: channel},
-			   getUserList);
+			   refreshUserList);
 	$(eid(channel_id)).append(users_handle);
     }
 }
@@ -328,14 +303,18 @@ function newChannelMessages(channel_messages, hostname, channel) {
     }
 }
 
-
-function refreshChannel(hostname, channel) {
+function updateChannel(hostname, channel) {
     return $.getJSON(channelMessagesURL(hostname, channel), function (msgs) {
 	// Newest message before we reverse it
 	current_event = Math.max(msgs[0], current_event);
 	msgs.reverse();
 	newChannelMessages(msgs, hostname, channel);
     });
+}
+
+function refreshChannel(hostname, channel) {
+    return $.when(refreshUserList(hostname, channel),
+		  updateChannel(hostname, channel));
 }
 
 function joinChannel(event) {
@@ -403,14 +382,11 @@ function addServerTab(hostname) {
 
 function updateServers() {
     // Update client side state for servers
-    $.getJSON('/api/networks', function (server_list) {
+    return $.getJSON('/api/networks', function (server_list) {
 	$.map(server_list, function (server) {
 	    // Overwrites everything, should probably try to sync this
 	    server_obj = new Server(server[1], server[2], server[3], server[4]);
 	    servers[server_obj.hostname] = server_obj;
-	});
-	$.when(listServers()).then(function () {
-	    startPoll(false);
 	});
     });
 }
