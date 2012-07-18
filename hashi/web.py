@@ -424,12 +424,7 @@ class IRCChannelUsers(Resource):
         def render_names(l):
             request.write(json.dumps(l[0][0]))
             request.finish()
-        names_sql = """SELECT args
-FROM events
-JOIN identities on target = identities.id
-WHERE kind = 'names' and token = %s
-ORDER BY timestamp
-LIMIT 1"""
+        names_sql = """SELECT names FROM channels WHERE name ILIKE %s;"""
         d = dbpool.runQuery(names_sql, (self.name,))
         d.addCallback(render_names)
         return server.NOT_DONE_YET
@@ -447,12 +442,7 @@ class IRCChannelTopic(Resource):
         def render_topic(l):
             request.write(json.dumps(l[0][0]))
             request.finish()
-        topic_sql = """SELECT args
-FROM events
-JOIN identities on target = identities.id
-WHERE kind = 'topic' and token = %s
-ORDER BY timestamp
-LIMIT 1"""
+        topic_sql = """SELECT topic FROM channels WHERE name ILIKE %s;"""
         d = dbpool.runQuery(topic_sql, (self.name,))
         d.addCallback(render_topic)
         return server.NOT_DONE_YET
