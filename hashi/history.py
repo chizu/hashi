@@ -68,6 +68,18 @@ class NickIdentity(Identity):
         super(NickIdentity, self).__init__(history, token)
 
 
+record_sql = """INSERT INTO events (id, network_id, source, target, args, observer_email, kind, timestamp)
+VALUES (%s, %s, %s, %s, %s, %s, %s, timestamp 'epoch' + %s * INTERVAL '1 second');"""
+topic_sql = """UPDATE channels SET topic = %s WHERE name ILIKE %s;"""
+name_sql = """UPDATE channels SET users = users || (%s => %s) WHERE name ILIKE %s;"""
+name_del_sql = """UPDATE channels SET users = delete(users, %s) WHERE name ILIKE %s;"""
+names_sql = """UPDATE channels SET users = hstore(%s, %s) WHERE name ILIKE %s;"""
+rename_sql = """WITH rename AS 
+(UPDATE channels SET users = delete(users, %s) WHERE users ? %s RETURNING channels.name)
+UPDATE channels SET users = users || (%s => 'online') WHERE name IN rename"""
+quit_sql = """UPDATE channels SET users = delete(users, %s);"""
+
+
 class History(object):
     """Interact with client history for a network."""
     def __init__(self, irc_network):
@@ -85,18 +97,24 @@ class History(object):
 
     def record(self, event_id, email, identity, kind, timestamp, args):
         cur = self.sql.cursor()
-        record_sql = """INSERT INTO events (id, network_id, source, target, args, observer_email, kind, timestamp)
-VALUES (%s, %s, %s, %s, %s, %s, %s, timestamp 'epoch' + %s * INTERVAL '1 second');"""
         # Record each kind of message, with a fallback for unimplemented ones
         if kind == 'privmsg' or kind == 'action' or kind == 'notice'\
                 or kind == 'userJoined' or kind == 'userLeft'\
-                or kind == 'userRenamed':
+                or kind == 'userRenamed' or kind == 'userQuit':
             source = NickIdentity(self, args[0]).id
             target = NickIdentity(self, args[1]).id
             try:
                 cur.execute(record_sql,
                             (event_id, self.id, source, target, args[2:],
                              email, kind, timestamp))
+                if kind == 'userJoined':
+                    cur.execute(name_sql, (args[0], 'online', args[1]))
+                elif kind == 'userLeft':
+                    cur.execute(name_del_sql, (args[0], args[1]))
+                elif kind == 'userRenamed':
+                    cur.execute(rename_sql, (args[0], args[0], args[1]))
+                elif kind == 'userQuit':
+                    cur.execute(quit_sql, (args[0]))
             except psycopg2.DataError:
                 # Unicode errors that should be handled better
                 pass
@@ -105,6 +123,12 @@ VALUES (%s, %s, %s, %s, %s, %s, %s, timestamp 'epoch' + %s * INTERVAL '1 second'
             cur.execute(record_sql,
                         (event_id, self.id, None, target, args[1:],
                          email, kind, timestamp))
+            if kind == 'topic':
+                cur.execute(topic_sql, (args[1], args[0]))
+            elif kind == 'names':
+                cur.execute(names_sql, (args[1:], 
+                                        ['online', ] * len(args) - 1, 
+                                        args[0]))
         else:
             # No formatter, stuff it all into the args column (to prevent loss)
             cur.execute(record_sql, (event_id, self.id, None, None, 

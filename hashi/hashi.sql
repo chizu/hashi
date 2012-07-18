@@ -20,6 +20,8 @@ CREATE TABLE channels (
     server_id integer NOT NULL,
     enabled boolean DEFAULT true NOT NULL,
     key text,
+    topic text,
+    users hstore DEFAULT hstore(array[]::text[]),
     PRIMARY KEY (user_email, name)
 );
 
