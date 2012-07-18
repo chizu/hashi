@@ -424,7 +424,7 @@ class IRCChannelUsers(Resource):
         def render_names(l):
             request.write(json.dumps(l[0][0]))
             request.finish()
-        names_sql = """SELECT names FROM channels WHERE name ILIKE %s;"""
+        names_sql = """SELECT akeys(users) FROM channels WHERE name ILIKE %s;"""
         d = dbpool.runQuery(names_sql, (self.name,))
         d.addCallback(render_names)
         return server.NOT_DONE_YET
