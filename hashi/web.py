@@ -379,7 +379,7 @@ class IRCChannelMessages(Resource):
 FROM identities
 JOIN events on (events.target = identities.id)
 JOIN identities as source_identities on (events.source = source_identities.id)
-WHERE identities.token = %s
+WHERE identities.token ILIKE %s
 AND events.observer_email = %s
 """
         query_args = [self.name, session.email]
