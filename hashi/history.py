@@ -127,7 +127,7 @@ class History(object):
                 cur.execute(topic_sql, (args[1], args[0]))
             elif kind == 'names':
                 cur.execute(names_sql, (args[1:], 
-                                        ['online', ] * len(args) - 1, 
+                                        ['online', ] * (len(args) - 1), 
                                         args[0]))
         else:
             # No formatter, stuff it all into the args column (to prevent loss)
