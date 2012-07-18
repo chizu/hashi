@@ -74,9 +74,7 @@ topic_sql = """UPDATE channels SET topic = %s WHERE name ILIKE %s;"""
 name_sql = """UPDATE channels SET users = users || (%s => %s) WHERE name ILIKE %s;"""
 name_del_sql = """UPDATE channels SET users = delete(users, %s) WHERE name ILIKE %s;"""
 names_sql = """UPDATE channels SET users = hstore(%s, %s) WHERE name ILIKE %s;"""
-rename_sql = """WITH rename AS 
-(UPDATE channels SET users = delete(users, %s) WHERE users ? %s RETURNING channels.name)
-UPDATE channels SET users = users || (%s => 'online') WHERE name IN rename"""
+rename_sql = """UPDATE channels SET users = delete(users, %s) || (%s => 'online') WHERE users ? %s;"""
 quit_sql = """UPDATE channels SET users = delete(users, %s);"""
 
 
@@ -112,9 +110,9 @@ class History(object):
                 elif kind == 'userLeft':
                     cur.execute(name_del_sql, (args[0], args[1]))
                 elif kind == 'userRenamed':
-                    cur.execute(rename_sql, (args[0], args[0], args[1]))
+                    cur.execute(rename_sql, (args[0], args[1], args[0]))
                 elif kind == 'userQuit':
-                    cur.execute(quit_sql, (args[0]))
+                    cur.execute(quit_sql, (args[0],))
             except psycopg2.DataError:
                 # Unicode errors that should be handled better
                 pass
