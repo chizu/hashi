@@ -203,6 +203,17 @@ function channelID(hostname_id, channel) {
     return hostname_id + '-' + String(channel).replace('/', '-slash-');
 }
 
+function displayUserList(hostname, channel) {
+    var list_items = [];
+    $.each(servers[hostname].channels[channel].users, function (i, item) {
+	list_items.push('<li>'+item+'</li>');
+    });
+    var ul = $(document.createElement('ul'));
+    ul.append(list_items.join(''));
+    //return servers[hostname].channels[channel].users.join(',');
+    return ul;
+}
+
 function refreshUserList(hostname, channel) {
     return $.getJSON(channelUsersURL(hostname, channel), function (users) {
 	servers[hostname].channels[channel].users = users;
@@ -237,8 +248,8 @@ function addChannelTab(hostname, channel) {
 	users_handle.addClass('left-grab');
 	users_handle.addClass('btn').addClass('btn-info');
 	users_handle.append('<i class="icon-chevron-left icon-white"></i>');
-	users_handle.click({hostname: hostname, channel: channel},
-			   refreshUserList);
+	popover_options = {title: 'Users', content: function () {return displayUserList(hostname, channel)}, placement: 'left'};
+	users_handle.popover(popover_options);
 	$(eid(channel_id)).append(users_handle);
     }
 }
