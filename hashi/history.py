@@ -97,8 +97,7 @@ class History(object):
         cur = self.sql.cursor()
         # Record each kind of message, with a fallback for unimplemented ones
         if kind == 'privmsg' or kind == 'action' or kind == 'notice'\
-                or kind == 'userJoined' or kind == 'userLeft'\
-                or kind == 'userRenamed' or kind == 'userQuit':
+                or kind == 'userJoined' or kind == 'userLeft':
             source = NickIdentity(self, args[0]).id
             target = NickIdentity(self, args[1]).id
             try:
@@ -109,13 +108,18 @@ class History(object):
                     cur.execute(name_sql, (args[0], 'online', args[1]))
                 elif kind == 'userLeft':
                     cur.execute(name_del_sql, (args[0], args[1]))
-                elif kind == 'userRenamed':
-                    cur.execute(rename_sql, (args[0], args[1], args[0]))
-                elif kind == 'userQuit':
-                    cur.execute(quit_sql, (args[0],))
             except psycopg2.DataError:
                 # Unicode errors that should be handled better
                 pass
+        elif kind == 'userQuit' or 'userRenamed':
+            source = NickIdentity(self, args[0]).id
+            cur.execute(record_sql,
+                        (event_id, self.id, source, None, args[1:],
+                         email, kind, timestamp))
+            if kind == 'userQuit':
+                cur.execute(quit_sql, (args[0],))
+            elif kind == 'userRenamed':
+                cur.execute(rename_sql, (args[0], args[1], args[0]))
         elif kind == 'names' or kind == 'topic':
             target = NickIdentity(self, args[0]).id
             cur.execute(record_sql,

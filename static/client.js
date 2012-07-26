@@ -79,7 +79,7 @@ function loggedIn(email) {
     $('#new-server').modal('hide');
     $('#logout').bind('click', logout);
     $('#new-server').submit(addServer);
-    updateServers().pipe(listServers).done(function () {
+    updateServers().pipe(listServers).done(function () {	
 	startPoll(false);
     });
     $('#usermenu .dropdown-toggle').html(email + '<b class="caret" />');
@@ -120,11 +120,23 @@ function serverControls(hostname) {
 
 function handleEvent(event) {
     $.each([JSON.parse(event.data)], function(index, msg) {
-	// Filter out the two kinds of messages that need userlist state
-	if (msg["kind"] != "userQuit" && msg["kind"] != "userRenamed") {
-	    var nick = msg["args"][0].split('!')[0];
+	var source = msg["args"][0].split('!')[0];
+	var target = msg["args"][1];
+	// These two require client knowledge of who is in which channel
+	if (msg["kind"] == "userQuit" || msg["kind"] == "userRenamed") {
+	    $.each(servers[hostname].channels, function (n, channel) {
+		if (msg["kind"] == "userRenamed" && servers[hostname].channels[channel].users[source]) {
+		    servers[hostname].channels[channel].users.push(target);
+		}
+		delete servers[hostname].channels[channel].users[source];
+		var lines = [[msg["event_id"], nick, msg["args"][2], msg["kind"]]];
+		newChannelMessages(lines, msg["network"], source);
+	    });
+	}
+	else {
+	    var nick = source;
+	    var channel = target;
 	    var lines = [[msg["event_id"], nick, msg["args"][2], msg["kind"]]];
-	    var channel = msg["args"][1];
 	    
 	    if (channel == msg["identity"]) {
 		// Talking to ourselves... private messages
@@ -210,7 +222,6 @@ function displayUserList(hostname, channel) {
     });
     var ul = $(document.createElement('ul'));
     ul.append(list_items.join(''));
-    //return servers[hostname].channels[channel].users.join(',');
     return ul;
 }
 
