@@ -192,8 +192,22 @@ html, body {
     font-style: italic;
 }
 
+.irc-body tr.userQuit {
+    font-size: 0.8em;
+    font-style: italic;
+}
+
+.irc-body tr.userRenamed {
+    font-size: 0.8em;
+    font-style: italic;
+}
+
 .irc-body tr.userLeft td.privmsg:after {
     content: "left";
+}
+
+.irc-body tr.userRenamed td.privmsg:before {
+    content: "changed their name to ";
 }
 
 .irc-body img {
