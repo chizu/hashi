@@ -100,17 +100,13 @@ class History(object):
                 or kind == 'userJoined' or kind == 'userLeft':
             source = NickIdentity(self, args[0]).id
             target = NickIdentity(self, args[1]).id
-            try:
-                cur.execute(record_sql,
-                            (event_id, self.id, source, target, args[2:],
-                             email, kind, timestamp))
-                if kind == 'userJoined':
-                    cur.execute(name_sql, (args[0], 'online', args[1]))
-                elif kind == 'userLeft':
-                    cur.execute(name_del_sql, (args[0], args[1]))
-            except psycopg2.DataError:
-                # Unicode errors that should be handled better
-                pass
+            cur.execute(record_sql,
+                        (event_id, self.id, source, target, args[2:],
+                         email, kind, timestamp))
+            if kind == 'userJoined':
+                cur.execute(name_sql, (args[0], 'online', args[1]))
+            elif kind == 'userLeft':
+                cur.execute(name_del_sql, (args[0], args[1]))
         elif kind == 'userQuit' or 'userRenamed':
             source = NickIdentity(self, args[0]).id
             cur.execute(record_sql,
@@ -155,7 +151,11 @@ class RemoteEventReceiver(object):
                 history_registry[network] = History(network)
             this = history_registry[network]
             id_obj = NickIdentity(this, identity)
-            this.record(event_id, email, id_obj, kind, timestamp, args)
+            try:
+                this.record(event_id, email, id_obj, kind, timestamp, args)
+            except psycopg2.DataError:
+                # Unicode errors that should be handled better
+                pass
             # Publish it for listening clients
             publish = json.dumps({"event_id":event_id,
                                   "network":network,
