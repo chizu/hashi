@@ -70,6 +70,7 @@ class NickIdentity(Identity):
 
 record_sql = """INSERT INTO events (id, network_id, source, target, args, observer_email, kind, timestamp)
 VALUES (%s, %s, %s, %s, %s, %s, %s, timestamp 'epoch' + %s * INTERVAL '1 second');"""
+record_global_sql = """INSERT INTO events (id, network_id, source, target, args, observer_email, kind, timestamp) VALUES (%s, %s, %s, %s, %s || ARRAY(SELECT name FROM channels WHERE users ? %s), %s, %s, timestamp 'epoch' + %s * INTERVAL '1 second');"""
 topic_sql = """UPDATE channels SET topic = %s WHERE name ILIKE %s;"""
 name_sql = """UPDATE channels SET users = users || (%s => %s) WHERE name ILIKE %s;"""
 name_del_sql = """UPDATE channels SET users = delete(users, %s) WHERE name ILIKE %s;"""
@@ -108,15 +109,17 @@ class History(object):
             elif kind == 'userLeft':
                 cur.execute(name_del_sql, (args[0], args[1]))
         elif kind == 'userQuit' or 'userRenamed':
+            # Quit and rename events are special because they are network wide
             source = NickIdentity(self, args[0]).id
-            cur.execute(record_sql,
-                        (event_id, self.id, source, None, args[1:],
+            cur.execute(record_global_sql,
+                        (event_id, self.id, source, None, args[1:], args[0],
                          email, kind, timestamp))
             if kind == 'userQuit':
                 cur.execute(quit_sql, (args[0],))
             elif kind == 'userRenamed':
                 cur.execute(rename_sql, (args[0], args[1], args[0]))
         elif kind == 'names' or kind == 'topic':
+            # These are both recorded and update state in the channel table
             target = NickIdentity(self, args[0]).id
             cur.execute(record_sql,
                         (event_id, self.id, None, target, args[1:],
