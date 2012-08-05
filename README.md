@@ -1,14 +1,22 @@
 # Hashi web IRC client/bouncer
 
-Licensing:
-  * This software is licensed under the GNU Affero General Public License v3 as provided in LICENSE.txt or at http://www.gnu.org/licenses/agpl.txt
+## Licensing
 
-Install requirements:
+This software is licensed under the GNU Affero General Public License v3 as provided in LICENSE.txt or at http://www.gnu.org/licenses/agpl.txt
+
+
+## Setup
+
+### Requirements
+
   * [txWebSocket](https://github.com/wulczer/txWebSocket)
   * txZMQ
   * PostgreSQL 9.1
 
-Setup: 
+### Instructions
+
+  * Run 'git submodule update --init' and 'cd bootstrap && make bootstrap' to build Twitter Bootstrap
+    * Node dependencies for building Bootstrap: 'npm install less uglify-js recess -g'
   * Create a python virtual environment, activate it, run setup.py install or develop
   * Create a database named hashi and grant access to the local user hashi.
   * Start all three daemons, web.py, client.py, and history.py
