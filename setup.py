@@ -9,6 +9,5 @@ setup(
     install_requires=["pyzmq>=2.1.7",
                       "txzmq",
                       "txWebSocket",
-                      "unicode_nazi",
                       "twisted"]
 )
