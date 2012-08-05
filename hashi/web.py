@@ -387,8 +387,9 @@ AND events.observer_email = %s
         before_sql = "\nAND events.id < %s"
         count_sql = "\nORDER BY events.id DESC LIMIT %s;"
         if "before" in request.args:
-            before = int(request.args["before"])
+            before = int(request.args["before"][0])
             msg_sql += before_sql
+            query_args.append(before)
         if "count" in request.args:
             count = max(0, min(int(request.args["count"][0]), 1000))
         else:
