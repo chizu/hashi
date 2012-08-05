@@ -137,7 +137,6 @@ function handleEvent(event) {
 	    var nick = source;
 	    var channel = target;
 	    var lines = [[msg["event_id"], nick, msg["args"][2], msg["kind"], msg["timestamp"]]];
-	    console.log(lines);
 	    
 	    if (channel == msg["identity"]) {
 		// Talking to ourselves... private messages
