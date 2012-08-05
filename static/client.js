@@ -130,7 +130,7 @@ function handleEvent(event) {
 		}
 		delete servers[hostname].channels[channel].users[source];
 		var lines = [[msg["event_id"], nick, msg["args"][2], msg["kind"], msg["timestamp"]]];
-		newChannelMessages(lines, msg["network"], source);
+		newChannelMessages(lines, msg["network"], source, true);
 	    });
 	}
 	else {
@@ -141,14 +141,28 @@ function handleEvent(event) {
 	    if (channel == msg["identity"]) {
 		// Talking to ourselves... private messages
 		addChannelTab(msg["network"], nick);
-		newChannelMessages(lines, msg["network"], nick);
+		newChannelMessages(lines, msg["network"], nick, true);
 	    }
 	    else {
 		addChannelTab(msg["network"], channel);
-		newChannelMessages(lines, msg["network"], channel);
+		newChannelMessages(lines, msg["network"], channel, true);
 	    }
 	}
     });
+}
+
+function scrolled(event) {
+    // Near the top, probably within one line of text
+    if ($(window).scrollTop() <= 10) {	
+	// Load more scrollback
+	active_server = $("#servers .active");
+	hostname = $("#servers-nav .active a").text();
+	channel = active_server.find('.subnav .channels-nav .active a').text();
+	before = active_server.find('.tab-content .active .irc-body tr:first').attr('event-id');
+	updateChannel(hostname, channel, {'before': before});
+	// 500 is a placeholder for calculating the added content length
+	$('html, body').scrollTop(500);
+    }
 }
 
 // Poll for events
@@ -172,14 +186,23 @@ function startPoll(sync) {
 	console.log("WebSocket error.");
 	startPoll(true);
     };
+    // Now that we're listening for events, watch for scroll events too
+    $(window).scroll(scrolled);
 }
 
 function channelURL(prefix, channel) {
     return prefix + '/' + encodeURIComponent(channel);
 }
 
-function channelMessagesURL(hostname, channel) {
-    return channelURL('/api/networks/'+hostname, channel)+'/messages';
+function channelMessagesURL(hostname, channel, channel_options) {
+    var url = channelURL('/api/networks/'+hostname, channel)+'/messages';
+    if (channel_options) {
+	url = url + '?';
+	for (var key in channel_options) {
+	    url = url + key + '=' + channel_options[key];
+	}
+    }
+    return url;
 }
 
 function channelUsersURL(hostname, channel) {
@@ -277,7 +300,7 @@ function expandImage(event) {
     $(this).button('toggle');
 }
 
-function newChannelMessages(channel_messages, hostname, channel) {
+function newChannelMessages(channel_messages, hostname, channel, append) {
     var hostname_id = hostnameId(hostname);
     var channel_id = channelID(hostname_id, channel);
     var irc_body = $(eid(channel_id)+' table.irc-body');
@@ -292,6 +315,7 @@ function newChannelMessages(channel_messages, hostname, channel) {
     // Stick new message rows in the div
     $.each(channel_messages, function(index, val) {
 	row = $(document.createElement('tr'));
+	row.attr('event-id', val[0]);
 	timestamp_col = $(document.createElement('td'));
 	timestamp_col.addClass('timestamp');
 	timestamp_col.text(String(val[4]).split('-')[1]);
@@ -320,7 +344,13 @@ function newChannelMessages(channel_messages, hostname, channel) {
 	row.append(timestamp_col);
 	row.append(nick_col);
 	row.append(msg_col);
-	irc_body.append(row);
+	if (append) {
+	    irc_body.append(row);
+	}
+	else
+	{
+	    irc_body.prepend(row);
+	}
     });
 
     // Scroll if new lines in the current channel and scrolled down
@@ -329,11 +359,9 @@ function newChannelMessages(channel_messages, hostname, channel) {
     }
 }
 
-function updateChannel(hostname, channel) {
-    return $.getJSON(channelMessagesURL(hostname, channel), function (msgs) {
-	// Newest message before we reverse it
+function updateChannel(hostname, channel, options) {
+    return $.getJSON(channelMessagesURL(hostname, channel, options), function (msgs) {
 	current_event = Math.max(msgs[0], current_event);
-	msgs.reverse();
 	newChannelMessages(msgs, hostname, channel);
     });
 }
