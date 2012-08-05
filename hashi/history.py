@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import time
+from datetime import datetime
 from collections import namedtuple
 
 import psycopg2
@@ -159,13 +159,16 @@ class RemoteEventReceiver(object):
             except psycopg2.DataError:
                 # Unicode errors that should be handled better
                 pass
+            # Convert to ISO8601 first
+            ts_datetime = datetime.fromtimestamp(float(timestamp))
+            ts_iso8601 = ts_datetime.strftime("%Y:%m:%d-%H:%M:%S")
             # Publish it for listening clients
             publish = json.dumps({"event_id":event_id,
                                   "network":network,
                                   "identity":identity,
                                   "kind":kind,
                                   "args":args,
-                                  "timestamp":timestamp})
+                                  "timestamp":ts_iso8601})
             self.listeners.send_multipart([email, publish])
 
             print("{0}:{1}:{2}:{3}:{4}".format(network, id_obj.token, kind, 

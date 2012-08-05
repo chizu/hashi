@@ -129,14 +129,15 @@ function handleEvent(event) {
 		    servers[hostname].channels[channel].users.push(target);
 		}
 		delete servers[hostname].channels[channel].users[source];
-		var lines = [[msg["event_id"], nick, msg["args"][2], msg["kind"]]];
+		var lines = [[msg["event_id"], nick, msg["args"][2], msg["kind"], msg["timestamp"]]];
 		newChannelMessages(lines, msg["network"], source);
 	    });
 	}
 	else {
 	    var nick = source;
 	    var channel = target;
-	    var lines = [[msg["event_id"], nick, msg["args"][2], msg["kind"]]];
+	    var lines = [[msg["event_id"], nick, msg["args"][2], msg["kind"], msg["timestamp"]]];
+	    console.log(lines);
 	    
 	    if (channel == msg["identity"]) {
 		// Talking to ourselves... private messages
@@ -292,6 +293,9 @@ function newChannelMessages(channel_messages, hostname, channel) {
     // Stick new message rows in the div
     $.each(channel_messages, function(index, val) {
 	row = $(document.createElement('tr'));
+	timestamp_col = $(document.createElement('td'));
+	timestamp_col.addClass('timestamp');
+	timestamp_col.text(String(val[4]).split('-')[1]);
 	nick_col = $(document.createElement('td'));
 	msg_col = $(document.createElement('td'));
 	nick_col.addClass('nick');
@@ -314,6 +318,7 @@ function newChannelMessages(channel_messages, hostname, channel) {
 	row.css("color", nick_color);
 	nick_col.text(nick_text);
 	row.addClass(val[3]);
+	row.append(timestamp_col);
 	row.append(nick_col);
 	row.append(msg_col);
 	irc_body.append(row);

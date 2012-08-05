@@ -157,9 +157,15 @@ html, body {
     background-color: #eeeeee;
 }
 
+.irc-body td.timestamp {
+    padding-right: 0.5em;
+    box-shadow: inset -10px 0px 20px -10px rgba(0,0,0,0.4);
+}
+
 .irc-body td.nick {
     padding-right: 1em;
     vertical-align: top;
+    text-align: right;
     box-shadow: inset -10px 0px 20px -10px rgba(0,0,0,0.4);
 }
 
