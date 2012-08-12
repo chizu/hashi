@@ -12,6 +12,7 @@ This software is licensed under the GNU Affero General Public License v3 as prov
   * [txWebSocket](https://github.com/wulczer/txWebSocket)
   * txZMQ
   * PostgreSQL 9.1 with hstore extension
+  * Node.js and npm
 
 ### Instructions
 
