@@ -1,3 +1,5 @@
+CREATE EXTENSION hstore;
+
 CREATE TABLE users (
     email text PRIMARY KEY
 );
