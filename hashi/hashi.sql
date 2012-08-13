@@ -36,7 +36,7 @@ CREATE TABLE events (
     "timestamp" timestamp with time zone DEFAULT now() NOT NULL,
     observer_email text references users(email),
     kind text DEFAULT 'privmsg'::text,
-    PRIMARY KEY (id, observer_id, server_id)
+    PRIMARY KEY (id, observer_email, server_id)
 );
 
 CREATE TABLE server_configs (
