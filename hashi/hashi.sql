@@ -1,4 +1,4 @@
-CREATE EXTENSION hstore;
+CREATE EXTENSION IF NOT EXISTS hstore;
 
 CREATE TABLE users (
     email text PRIMARY KEY
