@@ -40,7 +40,7 @@ CREATE TABLE events (
 );
 
 CREATE TABLE server_configs (
-    user_email integer references users(email),
+    user_email text references users(email),
     server_id integer references servers(id),
     nick text NOT NULL,
     enabled boolean DEFAULT false NOT NULL,
