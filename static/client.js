@@ -22,12 +22,19 @@ if (window.location.protocol == 'https:') {
     ws_protocol = 'wss';
 }
 if (window.location.port) {
-    var ws_url = ws_protocol+'://'+window.location.hostname+':'+window.location.port+'/api/websocket';
+    var ws_url = ws_protocol+'://'+window.location.hostname+':'+window.location.port+window.location.pathname+'../api/websocket';
 }
 else {
-    var ws_url = ws_protocol+'://'+window.location.hostname+'/api/websocket';
+    var ws_url = ws_protocol+'://'+window.location.hostname+window.location.pathname+'../api/websocket';
 }
 var socket = null;
+
+function tabCompletion(hostname, channel, input) {
+    if (input.selectionStart == input.selectionEnd == input.value.length) {
+	$.each(servers[hostname].channels[channel].users, function () {
+	});
+    }
+}
 
 // hashCode and intToARGB borrowed from http://stackoverflow.com/a/3426956
 function hashCode(str) { // java String#hashCode
@@ -99,7 +106,7 @@ function logout(event) {
     event.preventDefault();
     $.ajax({
 	type: 'POST',
-	url: '/api/logout',
+	url: '../api/logout',
 	success: function() {
 	    // and then redraw the UI.
 	    loggedOut();
@@ -114,7 +121,7 @@ function hostnameId(hostname) {
 function serverControls(hostname) {
     hostname_id = hostnameId(hostname);
     modal_id = hostname_id + '-channel-join';
-    modal_url = '/api/networks/'+hostname;
+    modal_url = '../api/networks/'+hostname;
     return '<div class="subnav subnav-fixed"><ul class="nav nav-pills channels-nav"><li><a class="btn-primary" data-toggle="modal" href="#'+modal_id+'"><i class="icon-plus icon-white"/></a></li></ul></div><div class="tab-content"></div><div id="'+modal_id+'" class="modal fade hide"><div class="modal-header">Open a tab!<a class="close" data-dismiss="modal"><i class="icon-remove" /></a></div><div class="modal-body"><form class="form-inline"><input type="text" class="input channel-name" placeholder="Channel or User" /> <input type="text" class="input channel-key" placeholder="Key" /></form></div><div class="modal-footer"><a href="'+modal_url+'" class="btn btn-primary">Open</a></div></div>';
 }
 
@@ -195,7 +202,7 @@ function channelURL(prefix, channel) {
 }
 
 function channelMessagesURL(hostname, channel, channel_options) {
-    var url = channelURL('/api/networks/'+hostname, channel)+'/messages';
+    var url = channelURL('../api/networks/'+hostname, channel)+'/messages';
     if (channel_options) {
 	url = url + '?';
 	for (var key in channel_options) {
@@ -206,7 +213,7 @@ function channelMessagesURL(hostname, channel, channel_options) {
 }
 
 function channelUsersURL(hostname, channel) {
-    return channelURL('/api/networks/'+hostname, channel)+'/users';
+    return channelURL('../api/networks/'+hostname, channel)+'/users';
 }
 
 function channelInput(event) {
@@ -400,7 +407,7 @@ function joinChannel(event) {
 }
 
 function updateChannels(hostname) {
-    var url = '/api/networks/'+hostname;
+    var url = '../api/networks/'+hostname;
     var deferred = $.getJSON(url, function (channel_list) {
 	return $.map(channel_list, function(val) {
 	    servers[hostname].channels[val[0]] = new Channel(val[0]);
@@ -436,7 +443,7 @@ function addServerTab(hostname) {
 
 function updateServers() {
     // Update client side state for servers
-    return $.getJSON('/api/networks', function (server_list) {
+    return $.getJSON('../api/networks', function (server_list) {
 	$.map(server_list, function (server) {
 	    // Overwrites everything, should probably try to sync this
 	    server_obj = new Server(server[1], server[2], server[3], server[4]);
@@ -489,7 +496,7 @@ function addServer(event) {
     event.preventDefault();
     $.ajax({
 	type: 'POST',
-	url: '/api/networks',
+	url: '../api/networks',
 	data: $(this).serialize(),
 	dataType: 'json',
 	success: function() {
@@ -511,7 +518,7 @@ function addServer(event) {
 function serverSettings(server, enabled, nick) {
     $.ajax({
 	type: 'POST',
-	url: '/api/networks/' + server,
+	url: '../api/networks/' + server,
 	data: {'enabled':enabled, 'nick':nick},
 	dataType: 'json',
 	success: function() {
@@ -528,7 +535,7 @@ function gotVerifiedEmail(assertion) {
     if (assertion !== null) {
 	$.ajax({
 	    type: 'POST',
-	    url: '/api/login',
+	    url: '../api/login',
 	    dataType: 'json',
 	    data: { assertion: assertion },
 	    success: function(res, status, xhr) {
@@ -552,7 +559,7 @@ $(document).ready(function() {
         return;
     }
 
-    $.get('/api/whoami', function (res) {
+    $.get('../api/whoami', function (res) {
 	if (res === null) loggedOut();
 	else loggedIn(res);
     }, 'json');
