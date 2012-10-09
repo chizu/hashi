@@ -134,7 +134,6 @@ class History(object):
             # No formatter, stuff it all into the args column (to prevent loss)
             cur.execute(record_sql, (event_id, self.id, None, None, 
                                      args, email, kind, timestamp))
-        self.sql.commit()
 
 
 class RemoteEventReceiver(object):
@@ -159,17 +158,22 @@ class RemoteEventReceiver(object):
             except psycopg2.DataError:
                 # Unicode errors that should be handled better
                 pass
+            finally:
+                this.sql.commit()
             # Convert to ISO8601 first
             ts_datetime = datetime.fromtimestamp(float(timestamp))
             ts_iso8601 = ts_datetime.strftime("%Y:%m:%d-%H:%M:%S")
             # Publish it for listening clients
-            publish = json.dumps({"event_id":event_id,
-                                  "network":network,
-                                  "identity":identity,
-                                  "kind":kind,
-                                  "args":args,
-                                  "timestamp":ts_iso8601})
-            self.listeners.send_multipart([email, publish])
+            try:
+                publish = json.dumps({"event_id":event_id,
+                                      "network":network,
+                                      "identity":identity,
+                                      "kind":kind,
+                                      "args":args,
+                                      "timestamp":ts_iso8601})
+                self.listeners.send_multipart([email, publish])
+            except UnicodeDecodeError:
+                print("Invalid unicode characters in message, not logged:")
 
             print("{0}:{1}:{2}:{3}:{4}".format(network, id_obj.token, kind, 
                                                args, timestamp))
