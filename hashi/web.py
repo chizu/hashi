@@ -37,7 +37,7 @@ def parse_cookies(cookie_text):
     cookies = {}
     for cookie in cookie_text.split(';'):
         try:
-            k, v = cookie.split('=', 1)
+            k, v = cookie.strip().split('=', 1)
             cookies[k] = v
         except ValueError:
             pass
