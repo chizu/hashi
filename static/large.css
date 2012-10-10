@@ -22,8 +22,9 @@
 }
 
 .irc-body {
-    left: 0;
-    margin-right: 16em;
+    margin-left: 1px;
+    margin-right: 15em;
+    width: auto;
 }
 
 .users-nav {
