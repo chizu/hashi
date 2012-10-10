@@ -1,0 +1,45 @@
+.panel {
+    width: 16em;
+    display: inline;
+}
+
+.subnav {
+    /* Left */
+    position: fixed;
+    top: 40px;
+    left: 0;
+    height: 100%;
+    border-right: 1px solid grey;
+}
+
+.panel.tab-content {
+    top: 40px;
+    bottom: 0;
+    width: auto;
+    position: absolute;
+    left: 16em;
+    right: 0;
+}
+
+.irc-body {
+    left: 0;
+    margin-right: 16em;
+}
+
+.users-nav {
+    position: fixed;
+    top: 40px;
+    left: auto;
+    right: 0;
+    width: 16em;
+    height: 100%;
+    border-left: 1px solid grey;
+}
+
+.channel-input {
+    position: absolute;
+    margin: 1em 16em 1em 1em;
+    right: 0;
+    left: 0;
+    width: auto;
+}
