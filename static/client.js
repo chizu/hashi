@@ -93,6 +93,16 @@ function loggedIn(email) {
     $('.dropdown-toggle').dropdown();
     $('.logged-out').hide();
     $('.logged-in').show();
+    $('#servers').touchwipe({
+	wipeLeft: function () { 
+	    slideTo($('.stage-left'), "irc-freenode-org");
+	    alert("left");
+	},
+	wipeRight: function () {
+	    alert("right");
+	},
+	preventDefaultEvents: true
+    });
 }
 
 function loggedOut() {
@@ -121,8 +131,9 @@ function hostnameId(hostname) {
 function serverControls(hostname) {
     hostname_id = hostnameId(hostname);
     modal_id = hostname_id + '-channel-join';
+    home_id = hostname_id + '-home';
     modal_url = '../api/networks/'+hostname;
-    return '<div class="subnav panel"><ul class="nav nav-list channels-nav"><li><a class="btn-primary" data-toggle="modal" href="#'+modal_id+'"><i class="icon-plus icon-white"/></a></li></ul></div><div class="tab-content panel"></div><div id="'+modal_id+'" class="modal fade hide"><div class="modal-header">Open a tab!<a class="close" data-dismiss="modal"><i class="icon-remove" /></a></div><div class="modal-body"><form class="form-inline"><input type="text" class="input channel-name" placeholder="Channel or User" /> <input type="text" class="input channel-key" placeholder="Key" /></form></div><div class="modal-footer"><a href="'+modal_url+'" class="btn btn-primary">Open</a></div></div>';
+    return '<div class="subnav stage-left panel"><ul class="nav nav-list channels-nav"><li><a class="btn-primary" data-toggle="modal" href="#'+modal_id+'"><i class="icon-plus icon-white"/></a></li></ul></div><div id="'+home_id+'" class="tab-content panel"></div><div id="'+modal_id+'" class="modal fade hide"><div class="modal-header">Open a tab!<a class="close" data-dismiss="modal"><i class="icon-remove" /></a></div><div class="modal-body"><form class="form-inline"><input type="text" class="input channel-name" placeholder="Channel or User" /> <input type="text" class="input channel-key" placeholder="Key" /></form></div><div class="modal-footer"><a href="'+modal_url+'" class="btn btn-primary">Open</a></div></div>';
 }
 
 function handleEvent(event) {
@@ -282,7 +293,7 @@ function addChannelTab(hostname, channel) {
 	$('#'+hostname_id).find('.channels-nav').append(li);
 	
 	server_children = $('#'+hostname_id).children('.tab-content');
-	server_children.append('<div id="'+channel_id+'" class="tab-pane active"><table class="irc-body"></table><ul class="users-nav panel"></ul></div>');
+	server_children.append('<div id="'+channel_id+'" class="tab-pane active"><table class="irc-body"></table><ul class="users-nav stage-right panel"></ul></div>');
 	$(eid(channel_id)).append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
 	$(eid(channel_id)).children('form').submit(options, channelInput);
     }
