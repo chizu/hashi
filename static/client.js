@@ -64,8 +64,8 @@ function intToDark(i) {
     }
 }
 
-function scrollBottom(speed) {
-    $('html, body').animate({scrollTop: $(document).height()}, speed);
+function scrollBottom(target, speed) {
+    target.animate({scrollTop: target.prop('scrollHeight')}, speed);
 }
 
 // Wraped around any id string with possible special characters
@@ -247,7 +247,7 @@ function channelInput(event) {
 }
 
 function switchChannelTab(event) {
-    scrollBottom(0);
+    scrollBottom(event.data.host_view, 0);
 }
 
 function channelID(hostname_id, channel) {
@@ -285,7 +285,9 @@ function addChannelTab(hostname, channel) {
 	link.attr('data-target', '#'+channel_id.replace(/([#:|.])/g, '\\$1'));
 	link.attr('data-toggle', 'tab');
 	link.text(String(channel));
-	link.bind('shown', switchChannelTab);
+	link.bind('shown',
+		  {'host_view':$('#'+hostname_id+'-home')},
+		  switchChannelTab);
 	li = $(document.createElement('li'));
 	li.append(link);
 	$('#'+hostname_id).find('.channels-nav').append(li);
@@ -314,7 +316,9 @@ function newChannelMessages(channel_messages, hostname, channel, append) {
     var channel_id = channelID(hostname_id, channel);
     var irc_body = $(eid(channel_id)+' table.irc-body');
 
-    if ($(window).scrollTop() + $(window).height() == $(document).height()) {
+    host_view = $('#' + hostname_id + '-home')
+    host_view_height = host_view.prop('scrollHeight');
+    if (host_view_height && (host_view.scrollTop() + host_view.height() == host_view_height)) {
 	scrolled_down = true;
     }
     else {
@@ -364,7 +368,7 @@ function newChannelMessages(channel_messages, hostname, channel, append) {
 
     // Scroll if new lines in the current channel and scrolled down
     if ($(eid(channel_id)).hasClass("active") && scrolled_down) {
-	scrollBottom(800);
+	scrollBottom(host_view, 800);
     }
 }
 
