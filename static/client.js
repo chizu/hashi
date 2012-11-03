@@ -1,5 +1,3 @@
-var current_event = 0;
-
 var servers = new Object();
 
 function Channel(name) {
@@ -372,7 +370,6 @@ function newChannelMessages(channel_messages, hostname, channel, append) {
 
 function updateChannel(hostname, channel, options) {
     return $.getJSON(channelMessagesURL(hostname, channel, options), function (msgs) {
-	current_event = Math.max(msgs[0], current_event);
 	newChannelMessages(msgs, hostname, channel);
     });
 }
