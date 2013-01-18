@@ -266,7 +266,18 @@ function displayUserList(hostname, channel) {
 
 function refreshUserList(hostname, channel) {
     return $.getJSON(channelUsersURL(hostname, channel), function (users) {
+	var hostname_id = hostnameId(hostname);
+	var channel_id = channelID(hostname_id, channel);
+	channel_tab = $(eid(channel_id));
+	user_ul = channel_tab.children('.users-nav');
+	user_ul.empty();
+	console.log(user_ul);
 	servers[hostname].channels[channel].users = users;
+	$.each(users, function (n, user) {
+	    user_li = $(document.createElement('li'))
+	    user_li.text(user);
+	    user_ul.append(user_li);
+	});	
     });
 }
 
@@ -293,9 +304,17 @@ function addChannelTab(hostname, channel) {
 	$('#'+hostname_id).find('.channels-nav').append(li);
 	
 	server_children = $('#'+hostname_id).children('.tab-content');
-	server_children.append('<div id="'+channel_id+'" class="tab-pane active"><table class="irc-body"></table><ul class="users-nav stage-right panel"></ul></div>');
-	$(eid(channel_id)).append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
-	$(eid(channel_id)).children('form').submit(options, channelInput);
+	server_children.append('<div id="'+channel_id+'" class="tab-pane active"><table class="irc-body"></table></div>');
+
+	user_ul = $(document.createElement('ul'));
+	user_ul.addClass('users-nav');
+	user_ul.addClass('stage-right');
+	user_ul.addClass('panel');
+
+	channel_tab = $(eid(channel_id));
+	channel_tab.append(user_ul);
+	channel_tab.append('<form><input class="channel-input" id="'+channel_id+'-input" name="'+channel+'" size="16" type="text" /></form>');
+	channel_tab.children('form').submit(options, channelInput);
     }
 }
 

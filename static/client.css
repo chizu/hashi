@@ -37,6 +37,16 @@ body {
     left: 0;
 }
 
+.users-nav {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.users-nav li {
+    padding-left: 0.5em;
+}
+
 /* IRC formatting */
 .irc-body {
     font-family: 'Ubuntu Mono', sans-serif;
