@@ -7,6 +7,7 @@ setup(
     author="Nell Hardcastle",
     author_email="chizu@spicious.com",
     install_requires=["pyzmq>=2.1.7",
+                      "zmq_irc"
                       "txzmq",
                       "txWebSocket",
                       "twisted"]

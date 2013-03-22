@@ -9,6 +9,7 @@ This software is licensed under the GNU Affero General Public License v3 as prov
 
 ### Requirements
 
+  * [zmq_irc](https://github.com/chizu/zmq_irc)
   * [txWebSocket](https://github.com/wulczer/txWebSocket)
   * txZMQ
   * PostgreSQL 9.1 with hstore extension
