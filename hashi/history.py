@@ -70,7 +70,7 @@ class NickIdentity(Identity):
 
 record_sql = """INSERT INTO events (id, network_id, source, target, args, observer_email, kind, timestamp)
 VALUES (%s, %s, %s, %s, %s, %s, %s, timestamp 'epoch' + %s * INTERVAL '1 second');"""
-record_global_sql = """INSERT INTO events (id, network_id, source, target, args, observer_email, kind, timestamp) VALUES (%s, %s, %s, %s, %s || ARRAY(SELECT name FROM channels WHERE users ? %s), %s, %s, timestamp 'epoch' + %s * INTERVAL '1 second');"""
+record_global_sql = """INSERT INTO events (id, network_id, source, target, args, observer_email, kind, timestamp) VALUES (%s, %s, %s, %s, CAST(%s as text[]) || ARRAY(SELECT name FROM channels WHERE users ? %s), %s, %s, timestamp 'epoch' + %s * INTERVAL '1 second');"""
 topic_sql = """UPDATE channels SET topic = %s WHERE name ILIKE %s;"""
 name_sql = """UPDATE channels SET users = users || (%s => %s) WHERE name ILIKE %s;"""
 name_del_sql = """UPDATE channels SET users = delete(users, %s) WHERE name ILIKE %s;"""
