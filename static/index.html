@@ -8,9 +8,9 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.0.0-rc.3/handlebars.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ember.js/1.0.0-rc.2/ember.js"></script>
     <script type="text/javascript" src="ember-data.js"></script>
-    <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
+    <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="hashi.js"></script>
-    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css" />
     <link rel="stylesheet" type="text/css" href="hashi.css" media="screen, handheld" />
     <link rel="stylesheet" type="text/css" href="large.css" media="screen  and (min-width: 40.5em)" />
     <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono" rel="stylesheet" type="text/css" />
@@ -19,7 +19,7 @@
   <script type="text/x-handlebars" data-template-name="application">
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">
-        <div class="container">
+        <div class="container-fluid">
           {{#linkTo index class="brand"}}Hashi{{/linkTo}}
           <div class="nav-collapse collapse">
             <ul class="nav">
@@ -27,28 +27,26 @@
 		{{#linkTo index}}Server Placeholder{{/linkTo}}
 	      </li>
             </ul>
-	    {{#if session}}
-	    <ul class="nav nav-collapse pull-right">
-              <li id="usermenu" class="dropdown logged-in">
-		<a href="#usermenu" class="dropdown-toggle">{{session.email}}</a>
-		<ul class="dropdown-menu">
-                  <li><a href="#" id="logout">Logout</a></li>
-		</ul>
-              </li>
-            </ul>
+	    {{#if session.email}}
+	    <ul class="nav pull-right">
+	      <li><a {{action logout}}>{{session.email}}</a></li>
+	    </ul>
 	    {{else}}
 	    <div class="nav pull-right">
-	      <img {{action login}} id="browserid" src="https://browserid.org/i/sign_in_blue.png" alt="Sign in" />
+	      <img {{action login}} id="browserid" src="https://browserid.org/i/sign_in_blue.png" />
 	    </div>
 	    {{/if}}
 	  </div>
         </div>
       </div>
     </div>
-    <div class="container">
+    <div class="container-fluid">
+      {{#if session.email}}
+      {{outlet}}
+      {{else}}
       <h1>Hashi<small> A modern web IRC client.</small></h1>
       <p>Log in to begin.</p>
-      {{outlet}}
+      {{/if}}
     </div>
   </script>
 

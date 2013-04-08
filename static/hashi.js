@@ -36,6 +36,7 @@ App.ApplicationController = Ember.Controller.extend({
 
 	// Indicate activity by greying out the BrowserID button
 	$('#browserid').fadeTo("fast", 0.4);
+	// Should make this come back somehow if you close the login window
 
 	navigator.id.watch({
 	    loggedInUser: null,
@@ -50,8 +51,8 @@ App.ApplicationController = Ember.Controller.extend({
 			    console.log("bad browserid assertion");
 			}
 			else {
-			    application.set("session",
-					    App.Session.find({email: res}));
+			    console.log("login success");
+			    application.set("session", App.Session.find(1));
 			}
 		    },
 		    error: function(res, status, xhr) {
@@ -64,5 +65,15 @@ App.ApplicationController = Ember.Controller.extend({
 	    },
 	});
 	navigator.id.request();
-    }
+    },
+    logout: function () {
+	var application = this;
+	$.ajax({
+            type: 'POST',
+            url: '../api/logout',
+            success: function () {
+		application.set("session", null);
+	    },
+	});
+    },
 });
