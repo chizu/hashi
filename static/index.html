@@ -3,100 +3,55 @@
   <head>
     <title>Hashi IRC</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script type="text/javascript" src="jquery.touchwipe.1.1.1.js"></script>
-    <script type="text/javascript" src="slideTo.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://login.persona.org/include.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.0.0-rc.3/handlebars.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ember.js/1.0.0-rc.2/ember.js"></script>
+    <script type="text/javascript" src="ember-data.js"></script>
     <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
-    <script src="https://login.persona.org/include.js" type="text/javascript"></script>
-    <script type="text/javascript" src="client.js"></script>
+    <script type="text/javascript" src="hashi.js"></script>
     <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="client.css" media="screen, handheld" />
+    <link rel="stylesheet" type="text/css" href="hashi.css" media="screen, handheld" />
     <link rel="stylesheet" type="text/css" href="large.css" media="screen  and (min-width: 40.5em)" />
     <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono" rel="stylesheet" type="text/css" />
   </head>
-  <body>
-    <div class="navbar navbar-fixed-top">
+
+  <script type="text/x-handlebars" data-template-name="application">
+    <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">
-        <div class="container-fluid">
-          <ul class="nav" id="servers-nav">
-	    <li class="active"><a class="brand" href="#server-config">Hashi</a></li>
-          </ul>
-	  <ul class="nav nav-collapse pull-right">
-	    <li id="usermenu" class="dropdown logged-in">
-	      <a href="#usermenu" class="dropdown-toggle"> </a>
-	      <ul class="dropdown-menu">
-		<li><a href="#" id="logout">Logout</a></li>
-	      </ul>
-	    </li>
-	  </ul>
-	  <img id="browserid" src="https://browserid.org/i/sign_in_blue.png" class="sign-in logged-out pull-right" alt="Sign in" />
-	</div>
-      </div>
-    </div>
-    <div class="container-fluid">
-      <div class="content logged-out">
-	<div class="page-header">
-	  <h1>Web IRC Client <small>screen+irssi for this decade</small></h1>
-	</div>
-	Sign in to start.
-      </div>
-      <div class="tab-content logged-in" id="servers">
-	<div class="tab-pane content active" id="server-config">
-	  <div class="page-header">
-	    <h1>Server Configuration <small>enter at least one IRC server</small>
-	      <a class="btn btn-primary pull-right" data-toggle="modal" href="#new-server">Add Server</a>
-	    </h1>
+        <div class="container">
+          {{#linkTo index class="brand"}}Hashi{{/linkTo}}
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li class="active">
+		{{#linkTo index}}Server Placeholder{{/linkTo}}
+	      </li>
+            </ul>
+	    {{#if session}}
+	    <ul class="nav nav-collapse pull-right">
+              <li id="usermenu" class="dropdown logged-in">
+		<a href="#usermenu" class="dropdown-toggle">{{session.email}}</a>
+		<ul class="dropdown-menu">
+                  <li><a href="#" id="logout">Logout</a></li>
+		</ul>
+              </li>
+            </ul>
+	    {{else}}
+	    <div class="nav pull-right">
+	      <img {{action login}} id="browserid" src="https://browserid.org/i/sign_in_blue.png" alt="Sign in" />
+	    </div>
+	    {{/if}}
 	  </div>
-	  <form>
-	    <table id="server-list" class="table table-striped">
-	      <thead>
-		<th>Enabled</th>
-		<th>Hostname</th>
-		<th>Port</th>
-		<th>SSL</th>
-		<th>Nick</th>
-	      </thead>
-	      <tbody></tbody>
-	    </table>
-	  </form>
-	  <form id="new-server" class="modal hide fade">
-	    <div class="modal-header">
-	      <a href="#" class="close" data-dismiss="modal">&times;</a>
-	      <h3>New Server</h3>
-	    </div>
-	    <div class="modal-body">
-	      <div class="clearfix">
-		<label for="nick">Nick</label>
-		<div class="input">
-		  <input id="nick" name="nick" size="30" type="text" value="hashi" />
-		</div>
-	      </div>
-	      <div class="clearfix">
-		<label for="hostname">Hostname</label>
-		<div class="input">
-		  <input id="hostname" name="hostname" size="30" type="text" value="irc.freenode.org" />
-		  <span class="help-inline"></span>
-		</div>
-	      </div>
-	      <div class="clearfix">
-		<label for="port">Port</label>
-		<div class="input">
-		  <div class="input-prepend">
-		    <label class="add-on">
-		      <span id="ssl-label">SSL</span>
-		      <input type="checkbox" name="ssl" id="ssl" value="" checked="true" />
-		    </label>
-		    <input class="small" id="port" name="port" size="16" type="number" value="6697" />
-		  </div>
-		</div>
-	      </div>
-	    </div>
-	    <div class="modal-footer">
-	      <input type="submit" class="btn btn-primary" value="Connect" />&nbsp;<button type="reset" class="btn">Clear</button>
-	    </div>
-	  </form>
-	</div>
+        </div>
       </div>
     </div>
-  </body>
+    <div class="container">
+      <h1>Hashi<small> A modern web IRC client.</small></h1>
+      <p>Log in to begin.</p>
+      {{outlet}}
+    </div>
+  </script>
+
+  <body></body>
+
 </html>
