@@ -127,14 +127,6 @@ class APISocket(WebSocketHandler):
             if frame == "sync":
                 APISocket.controllers[self.session].sync()
 
-class APISession(Resource):
-    isLeaf = True
-
-    @require_login
-    def render_GET(self, request, session):
-        """Return session uid."""
-        return json.dumps(session.uid)
-
 
 class APILogin(Resource):
     isLeaf = True
@@ -177,15 +169,16 @@ class APILogin(Resource):
         return server.NOT_DONE_YET
 
 
-class APIWhoAmI(Resource):
+class APISession(Resource):
     isLeaf = True
     
     def render_GET(self, request):
         session = request.getSession()
         if hasattr(session, "email"):
-            return json.dumps(session.email)
+            return json.dumps({"session":{"uid":session.uid,
+                                          "email":session.email}})
         else:
-            return json.dumps(None)
+            return json.dumps({})
 
 
 class APILogout(Resource):
@@ -457,7 +450,6 @@ def start():
     root.putChild('api', rest_api)
     rest_api.putChild('session', APISession())
     rest_api.putChild('login', APILogin())
-    rest_api.putChild('whoami', APIWhoAmI())
     rest_api.putChild('logout', APILogout())
     irc_network = IRCNetwork()
     rest_api.putChild('networks', irc_network)
