@@ -199,8 +199,10 @@ class IRCNetwork(Resource):
 
     def list_servers(self, server_list, request):
         print(server_list)
+        servers = [dict(zip(("email", "hostname", "port", "ssl", "nick"), x))
+                   for x in server_list]
         if server_list:
-            request.write(json.dumps(server_list))
+            request.write(json.dumps({"networks":servers}))
         else:
             request.write(json.dumps(None))
         request.finish()

@@ -50,6 +50,40 @@
     </div>
   </script>
 
+  <script type="text/x-handlebars" data-template-name="networks">
+    <div class="page-header">
+      <h1>Server Configuration <small>enter at least one IRC server</small>
+	<a class="btn btn-primary pull-right" data-toggle="modal" href="#new-server">Add Server</a>
+      </h1>
+    </div>
+    <form>
+      <table id="server-list" class="table table-striped">
+        <thead>
+          <th>Enabled</th>
+          <th>Hostname</th>
+          <th>Port</th>
+          <th>SSL</th>
+          <th>Nick</th>
+        </thead>
+        <tbody>
+	  {{#each model}}
+	  <tr>
+	    <td><input type="checkbox" class="server-disable" checked /></td>
+	    <td>{{hostname}}</td>
+	    <td>{{port}}</td>
+	    {{#if ssl}}	       
+	    <td><a class="btn btn-small btn-success disabled"><i class="icon-lock icon-white" /> Enabled</a></td>
+	    {{else}}
+	    <td><a class="btn btn-small btn-danger disabled"><i class="icon-lock icon-white" /> Disabled</a></td>
+	    {{/if}}
+	    <td>{{nick}}</td>
+	  </tr>
+	  {{/each}}
+	</tbody>
+      </table>
+    </form>
+  </script>
+  
   <body></body>
 
 </html>

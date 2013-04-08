@@ -19,8 +19,22 @@ App.Session = DS.Model.extend({
     email: DS.attr("string"),
 });
 
+App.Network = DS.Model.extend({
+    email: DS.attr("string"),
+    hostname: DS.attr("string"),
+    port: DS.attr("number"),
+    ssl: DS.attr("boolean"),
+    nick: DS.attr("string")
+});
+
 App.Router.map(function() {
-    this.route("settings");
+    this.route("networks");
+});
+
+App.NetworksRoute = Ember.Route.extend({
+    model: function () {
+	return App.Network.find();
+    }
 });
 
 App.ApplicationController = Ember.Controller.extend({
