@@ -20,6 +20,26 @@ irc_end = ZmqEndpoint("connect", "tcp://127.0.0.1:9912")
 irc_client = ZmqPushConnection(zmqfactory, "hashi-web", irc_end)
 
 
+def jtype(json_type="error", objects={}):
+    """Mini-wrapper for the conventional json type structure."""
+    return json.dumps({json_type: objects})
+
+
+def get_any(request, key):
+    try:
+        # Look at request content
+        query_json = json.loads(request.content.read())
+        value = query_json[key]
+    except ValueError:
+        # Or failing that, GET arguments
+        try:
+            value = request.args[key][0]
+        except KeyError:
+            # Key not present in either
+            return None
+    return value
+
+
 def require_login(func):
     @wraps(func)
     def wrapped(self, request):
@@ -28,7 +48,7 @@ def require_login(func):
             return func(self, request, session)
         else:
             request.setResponseCode(401)
-            return json.dumps("must be logged in")
+            return json.dumps({"error": {"message": "must be logged in"}})
     return wrapped
 
 
@@ -174,6 +194,7 @@ class APISession(Resource):
     
     def render_GET(self, request):
         session = request.getSession()
+        # The session is valid if we have stored a BrowserID email
         if hasattr(session, "email"):
             return json.dumps({"session":{"uid":session.uid,
                                           "email":session.email}})
@@ -191,18 +212,11 @@ class APILogout(Resource):
 
 
 class IRCNetwork(Resource):
-    def getChild(self, name, request):
-        if name == '':
-            return self
-        else:
-            return IRCServer(name)
-
     def list_servers(self, server_list, request):
-        print(server_list)
         servers = [dict(zip(("email", "hostname", "port", "ssl", "nick"), x))
                    for x in server_list]
         if server_list:
-            request.write(json.dumps({"networks":servers}))
+            request.write(json.dumps({"network":servers}))
         else:
             request.write(json.dumps(None))
         request.finish()
@@ -250,34 +264,20 @@ VALUES (%s, %s, %s)"""
 
 
 class IRCServer(Resource):
-    def __init__(self, name):
+    def __init__(self, hostname=None):
         Resource.__init__(self)
-        self.name = name
+        self.hostname = hostname
 
-    def getChild(self, name, request):
-        if name == '':
+    def getChild(self, hostname, request):
+        if hostname == '':
             return self
         else:
-            return IRCChannel(name, self.name)
-
-    @require_login
-    def render_GET(self, request, session):
-        """List of channels by default"""
-        def render_channels(l):
-            request.write(json.dumps(l))
-            request.finish()
-        chan_sql = """SELECT name FROM channels 
-JOIN servers ON channels.server_id = servers.id
-WHERE user_email = %s AND hostname = %s AND enabled = true
-ORDER BY name;"""
-        d = dbpool.runQuery(chan_sql, (session.email,self.name));
-        d.addCallback(render_channels)
-        return server.NOT_DONE_YET
+            return IRCServer(hostname)
 
     def connect_server(self, result, request, nick):
         email = request.getSession().email
         # Tell the IRC client when a server is added so it can refresh
-        irc_client.send([str(email), "global", "connect", self.name,
+        irc_client.send([str(email), "global", "connect", self.hostname,
                          str(nick)])
         # Maybe this should be in a callback?
         # Refreshing the web interface here will sometimes be too fast.
@@ -287,7 +287,7 @@ ORDER BY name;"""
 
     @require_login
     def render_POST(self, request, session):
-        print("Requested connection to {0}".format(self.name))
+        print("Requested connection to {0}".format(self.hostname))
         email = session.email
         nick = request.args["nick"][0]
         enabled = (request.args["enabled"][0] == "true")
@@ -305,31 +305,58 @@ AND NOT EXISTS (SELECT 1 FROM server_configs
                 WHERE user_email = %s AND server_id = servers.id);"""
         d = dbpool.runOperation(connect_sql,
                                 (email, # UPDATE
-                                 self.name, # UPDATE subquery
-                                 email, nick, True, self.name, # INSERT
+                                 self.hostname, # UPDATE subquery
+                                 email, nick, True, self.hostname, # INSERT
                                  email)) # INSERT subquery
         d.addCallback(self.connect_server, request, nick)
         return server.NOT_DONE_YET
 
 
 class IRCChannel(Resource):
-    def __init__(self, name, server):
+    def __init__(self, name=None):
         Resource.__init__(self)
         self.name = name
-        self.server = server
 
     def getChild(self, name, request):
         if name == '':
             return self
-        elif name == 'messages':
-            return IRCChannelMessages(self.name, self.server)
-        elif name == 'users':
-            return IRCChannelUsers(self.name, self.server)
-        elif name == 'topic':
-            return IRCChannelTopic(self.name, self.server)
         else:
-            # Channel name has slashes, support a "multilevel" channel name.
-            return IRCChannel(self.name + '/' + name, self.server)
+            return IRCChannel(name)
+
+    @require_login
+    def render_GET(self, request, session):
+        """List of channels by default"""
+        def render_channels(l):
+            payload = jtype("channel", 
+                            [{'server_id': row[0], 'name':row[1]}
+                             for row in l])
+            request.write(payload)
+            request.finish()
+        chan_sql = """SELECT server_id, name FROM channels"""
+        server_hostname = get_any(request, "hostname")
+        server_id = get_any(request, "server_id")
+        if server_hostname and not server_id:
+            chan_sql += """
+JOIN servers ON channels.server_id = servers.id
+WHERE user_email = %s AND hostname = %s AND enabled = true
+ORDER BY name;"""
+            sql_args = (session.email, server_hostname)
+        elif server_id and not server_hostname:
+            chan_sql += """
+WHERE user_email = %s AND server_id = %s AND enabled = true
+ORDER BY name;"""
+            sql_args = (session.email, server_id)
+        elif server_id and server_hostname:
+            return jtype(objects={"message": 
+                   "Needs either a server_id or hostname but not both."})
+        else:
+            chan_sql += """
+WHERE user_email = %s AND enabled = true
+ORDER BY name;"""
+            sql_args = (session.email,)
+        d = dbpool.runQuery(chan_sql, sql_args)
+        d.addCallback(render_channels)
+        return server.NOT_DONE_YET
 
     @require_login
     def render_POST(self, request, session):
@@ -356,19 +383,29 @@ class IRCChannel(Resource):
         return server.NOT_DONE_YET
 
 
-class IRCChannelMessages(Resource):
+class IRCMessage(Resource):
     isLeaf = True
-    def __init__(self, name, server):
+    def __init__(self, event_id=None):
         Resource.__init__(self)
-        self.name = name
-        self.server = server
+        self.event_id = event_id
+
+    def getChild(self, event_id, request):
+        if event_id == '':
+            return self
+        else:
+            return IRCMessages(event_id)
 
     @require_login
     def render_GET(self, request, session):
         """Channel history"""
         def render_messages(l):
-            request.write(json.dumps(l))
+            payload = jtype("message", 
+                            [{'id': row[0], 'source':row[1], 'args':row[2],
+                              'kind': row[3], 'timestamp':row[4]} 
+                             for row in l])
+            request.write(payload)
             request.finish()
+        channel = get_any(request, "channel")
         msg_sql = """SELECT events.id, source_identities.token, events.args[0:1], events.kind, to_char(events.timestamp, 'IYYY:MM:DD-HH24:MI:SS')
 FROM identities
 RIGHT OUTER JOIN events on (events.target = identities.id)
@@ -377,7 +414,7 @@ WHERE (identities.token ILIKE %s
        OR (events.target IS NULL AND %s ILIKE ANY(events.args)))
 AND events.observer_email = %s
 """
-        query_args = [self.name, self.name, session.email]
+        query_args = [channel, channel, session.email]
         before_sql = "\nAND events.id < %s"
         count_sql = "\nORDER BY events.id DESC LIMIT %s;"
         if "before" in request.args:
@@ -408,12 +445,17 @@ AND events.observer_email = %s
         return json.dumps(True)
 
 
-class IRCChannelUsers(Resource):
+class IRCUser(Resource):
     isLeaf = True
-    def __init__(self, name, server):
+    def __init__(self, name=None):
         Resource.__init__(self)
         self.name = name
-        self.server = server
+
+    def getChild(self, name, request):
+        if name == '':
+            return self
+        else:
+            return IRCUser(name)
 
     @require_login
     def render_GET(self, request, session):
@@ -426,20 +468,34 @@ class IRCChannelUsers(Resource):
         return server.NOT_DONE_YET
 
 
-class IRCChannelTopic(Resource):
-    isLeaf = True
-    def __init__(self, name, server):
+class IRCTopic(Resource):
+    def __init__(self, channel=None):
         Resource.__init__(self)
-        self.name = name
-        self.server = server
+        if channel:
+            self.isLeaf = True
+        self.channel = channel
+
+    def getChild(self, channel, request):
+        if channel == '':
+            return self
+        else:
+            return IRCTopic(channel)
 
     @require_login
     def render_GET(self, request, session):
         def render_topic(l):
-            request.write(json.dumps(l[0][0]))
+            payload = jtype('topic',
+                            [{'topic': row[0], 'channel':row[1], 
+                              'server_id':row[2]} 
+                             for row in l])
+            request.write(payload)
             request.finish()
-        topic_sql = """SELECT topic FROM channels WHERE name ILIKE %s;"""
-        d = dbpool.runQuery(topic_sql, (self.name,))
+        topic_sql = """SELECT topic, name, server_id FROM channels"""
+        if self.channel:
+            topic_sql += """ WHERE name ILIKE %s;"""
+        else:
+            topic_sql += """;"""
+        d = dbpool.runQuery(topic_sql, (self.channel,))
         d.addCallback(render_topic)
         return server.NOT_DONE_YET
 
@@ -450,12 +506,18 @@ def start():
 
     rest_api = API()
     root.putChild('api', rest_api)
+    # Application logic
     rest_api.putChild('session', APISession())
     rest_api.putChild('login', APILogin())
     rest_api.putChild('logout', APILogout())
-    irc_network = IRCNetwork()
-    rest_api.putChild('networks', irc_network)
-
+    # IRC objects
+    rest_api.putChild('network', IRCNetwork())
+    rest_api.putChild('server', IRCServer())
+    rest_api.putChild('channel', IRCChannel())
+    rest_api.putChild('message', IRCMessage())
+    rest_api.putChild('topic', IRCTopic())
+    rest_api.putChild('user', IRCUser())
+    # Special case for building our web socket
     site = WebSocketSite(root)
     site.addHandler('/api/websocket', APISocket)
     site.sessionFactory = LongSession
