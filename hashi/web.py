@@ -387,9 +387,10 @@ ORDER BY name;"""
 
 
 class IRCMessage(Resource):
-    isLeaf = True
     def __init__(self, event_id=None):
         Resource.__init__(self)
+        if event_id:
+            self.isLeaf = True
         self.event_id = event_id
 
     def getChild(self, event_id, request):
@@ -449,9 +450,10 @@ AND events.observer_email = %s
 
 
 class IRCUser(Resource):
-    isLeaf = True
     def __init__(self, name=None):
         Resource.__init__(self)
+        if name:
+            self.isLeaf = True
         self.name = name
 
     def getChild(self, name, request):
