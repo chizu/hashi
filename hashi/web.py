@@ -81,7 +81,10 @@ class Hashioki(Resource):
 class API(Resource):
     """RESTful API
 
-    Example URL: /network/irc.freenode.org/#hashi/topic"""
+    Example URLs: 
+    /network/irc.freenode.org -> Get info about irc.freenode.org
+    /channel -> Display all channels
+    /topic/%23freenode -> Display the #freenode topic"""
     def getChild(self, name, request):
         if name == '':
             return self
