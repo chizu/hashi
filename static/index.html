@@ -17,15 +17,29 @@
   </head>
 
   <script type="text/x-handlebars" data-template-name="application">
+    {{partial navigation}}
+    <div class="container-fluid">
+      {{#if session.email}}
+      {{outlet}}
+      {{else}}
+      <h1>Hashi<small> A modern web IRC client.</small></h1>
+      <p>Log in to begin.</p>
+      {{/if}}
+    </div>
+  </script>
+
+  <script type="text/x-handlebars" data-template-name="_navigation">
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container-fluid">
-          {{#linkTo index class="brand"}}Hashi{{/linkTo}}
+          {{#linkTo networks class="brand"}}Servers{{/linkTo}}
           <div class="nav-collapse collapse">
             <ul class="nav">
-              <li class="active">
-		{{#linkTo index}}Server Placeholder{{/linkTo}}
-	      </li>
+	      {{#each network in networks}}
+	        {{#linkTo networks.network network tagName="li" class="brand"}}
+	          <a {{bindAttr href="view.href"}}>{{network.hostname}}</a>
+	        {{/linkTo}}
+	      {{/each}}
             </ul>
 	    {{#if session.email}}
 	    <ul class="nav pull-right">
@@ -40,22 +54,16 @@
         </div>
       </div>
     </div>
-    <div class="container-fluid">
-      {{#if session.email}}
-      {{outlet}}
-      {{else}}
-      <h1>Hashi<small> A modern web IRC client.</small></h1>
-      <p>Log in to begin.</p>
-      {{/if}}
-    </div>
   </script>
 
   <script type="text/x-handlebars" data-template-name="networks">
-    <div class="page-header">
-      <h1>Server Configuration <small>enter at least one IRC server</small>
-	<a class="btn btn-primary pull-right" data-toggle="modal" href="#new-server">Add Server</a>
-      </h1>
-    </div>
+    {{outlet}}
+  </script>
+
+  <script type="text/x-handlebars" data-template-name="networks/index">
+    <h1>Server Configuration <small>enter at least one IRC server</small>
+      <a class="btn btn-primary pull-right" data-toggle="modal" href="#new-server">Add Server</a>
+    </h1>
     <form>
       <table id="server-list" class="table table-striped">
         <thead>
@@ -84,6 +92,24 @@
     </form>
   </script>
   
+  <script type="text/x-handlebars" data-template-name="networks/network">
+    <div class="row-fluid">
+      <div class="span3">
+	<div class="well sidebar-nav">
+	  <ul class="nav nav-list">
+	    <!-- Dummy data -->
+	    <li class="nav-header">Channels</li>
+	    <li class="active"><a href="#">#freenode</a></li>
+	    <li><a href="#">#notfreenode</a></li>
+	  </ul>
+	</div>
+      </div>
+      <div class="span9">
+	{{outlet}}
+      </div>
+    </div class="row-fluid">
+  </script>
+
   <body></body>
 
 </html>

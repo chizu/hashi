@@ -14,9 +14,30 @@ DS.RESTAdapter.reopen({
     namespace: 'hashi/api',
 });
 
+
+// --Model definitions--
 App.Session = DS.Model.extend({
     uid: DS.attr("number"),
     email: DS.attr("string"),
+});
+
+App.Message = DS.Model.extend({
+    id: DS.attr("number"), // Event sequence
+    source: DS.belongsTo("App.User"),
+    //args: DS.attrArray("string"),
+    kinds: DS.attr("string"),
+    timestamp: DS.attr("date"),
+});
+
+// Kind of useless - there's no real User model backing this
+App.User = DS.Model.extend({
+    nick: DS.attr("string"),
+});
+
+App.Channel = DS.Model.extend({
+    topic: DS.attr("string"),
+    messages: DS.hasMany("App.Message"),
+    users: DS.hasMany("App.User"),
 });
 
 App.Network = DS.Model.extend({
@@ -24,26 +45,30 @@ App.Network = DS.Model.extend({
     hostname: DS.attr("string"),
     port: DS.attr("number"),
     ssl: DS.attr("boolean"),
-    nick: DS.attr("string")
+    nick: DS.attr("string"),
+    channels: DS.hasMany("App.Channel"),
 });
 
+// --Main router--
 App.Router.map(function() {
-    this.route("networks");
+    this.resource("networks", function () {
+	this.route("network", {path: "/:hostname"});
+    });
 });
 
-App.NetworksRoute = Ember.Route.extend({
+App.NetworkRoute = Ember.Route.extend({
     model: function () {
 	return App.Network.find();
     }
 });
 
+// --Controllers--
 App.ApplicationController = Ember.Controller.extend({
     session: null,
     init: function () {
 	this._super();
 	// There is never more than one session per instance
 	this.session = App.Session.find(0);
-	console.log(this.session);
     },
     login: function () {
 	var application = this;
