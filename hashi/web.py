@@ -82,9 +82,9 @@ class API(Resource):
     """RESTful API
 
     Example URLs: 
-    /network/irc.freenode.org -> Get info about irc.freenode.org
-    /channel -> Display all channels
-    /topic/%23freenode -> Display the #freenode topic"""
+    /networks/irc.freenode.org -> Get info about irc.freenode.org
+    /channels -> Display all channels
+    /topics/%23freenode -> Display the #freenode topic"""
     def getChild(self, name, request):
         if name == '':
             return self
@@ -219,7 +219,7 @@ class IRCNetwork(Resource):
         servers = [dict(zip(("email", "hostname", "port", "ssl", "nick"), x))
                    for x in server_list]
         if server_list:
-            request.write(json.dumps({"network":servers}))
+            request.write(json.dumps({"networks":servers}))
         else:
             request.write(json.dumps(None))
         request.finish()
@@ -516,12 +516,12 @@ def start():
     rest_api.putChild('login', APILogin())
     rest_api.putChild('logout', APILogout())
     # IRC objects
-    rest_api.putChild('network', IRCNetwork())
-    rest_api.putChild('server', IRCServer())
-    rest_api.putChild('channel', IRCChannel())
-    rest_api.putChild('message', IRCMessage())
-    rest_api.putChild('topic', IRCTopic())
-    rest_api.putChild('user', IRCUser())
+    rest_api.putChild('networks', IRCNetwork())
+    rest_api.putChild('servers', IRCServer())
+    rest_api.putChild('channels', IRCChannel())
+    rest_api.putChild('messages', IRCMessage())
+    rest_api.putChild('topics', IRCTopic())
+    rest_api.putChild('users', IRCUser())
     # Special case for building our web socket
     site = WebSocketSite(root)
     site.addHandler('/api/websocket', APISocket)
