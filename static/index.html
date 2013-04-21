@@ -13,14 +13,21 @@
       <div class="navbar-inner">
         <div class="container-fluid">
           <a href="#/network" class="brand" ng-class="{active: routeIs('/network')}">Hashi</a>
-          <div class="nav-collapse collapse">
+          <div class="nav-collapse">
             <ul class="nav">
 	      <li ng-repeat="network in networks"><a href="#/network/{{network.hostname}}">{{network.hostname}}</a></li>
             </ul>
-	    <div class="nav pull-right">
-	      <img id="browserid" src="https://browserid.org/i/sign_in_blue.png" ng-click="login()" ng-show="email == null" />
-	      <span ng-show="email != null">{{email}}</span>
-	    </div>
+	    <ul class="nav pull-right">
+	      <li ng-show="email == null">
+		<img id="browserid" src="https://browserid.org/i/sign_in_blue.png" ng-click="login()"/>
+	      </li>
+	      <li class="dropdown" ng-show="email != null">
+		<a id="useremail" class="dropdown-toggle" href="#" data-toggle="dropdown">{{email}}<b class="caret"></b></a>
+		<ul id="userdropdown" class="dropdown-menu">
+		  <li><a href ng-click="logout()">Logout</a></li>
+		</ul>
+	      </li>
+	    </ul>
 	  </div>
         </div>
       </div>

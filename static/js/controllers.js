@@ -54,6 +54,7 @@ function NavigationController($scope, $location, $cookies) {
 				console.log("login success", res.email);
 				$cookies.email = res.email;
 				$scope.email = res.email;
+				$location.path("/network");
 			    });
 			}
 		    },
@@ -67,5 +68,13 @@ function NavigationController($scope, $location, $cookies) {
 	    },
 	});
 	navigator.id.request();
+    };
+
+    $scope.logout = function () {
+	navigator.id.logout();
+	delete $cookies.email;
+	delete $cookies.TWISTED_SESSION;
+	$scope.email = null;
+	$location.path("/landing");
     };
 }
