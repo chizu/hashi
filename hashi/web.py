@@ -163,10 +163,10 @@ class APILogin(Resource):
             def existing_user(failure):
                 # Don't have to do much, just end the request
                 print(failure)
-                request.write(json.dumps(email))
+                request.write(json.dumps({"email":email}))
                 request.finish()
             def new_user(query_rows):
-                request.write(json.dumps(email))
+                request.write(json.dumps({"email":email}))
                 request.finish()
             d = dbpool.runOperation("INSERT INTO users (email) VALUES (%s)", 
                                     (email,))
