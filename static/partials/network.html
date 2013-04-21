@@ -1,1 +1,7 @@
-<div>Network: {{hostname}}</div>
+<div class="span3">
+  <ul class="nav nav-list">
+    <li class="nav-header">Channels</li>
+    <li ng-repeat="channel in channels"><a ng-href="#/network/{{hostname | encodeURIComponent}}/{{channel.name | encodeURIComponent}}">{{channel.name}}</a></li>
+  </ul>
+</div>
+<div class="span9" channel />

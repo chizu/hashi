@@ -4,6 +4,10 @@ function NetworkConfigController($scope) {
 
 function NetworkController($scope, $routeParams) {
     $scope.hostname = $routeParams.hostname;
+    $scope.channels = [
+	{"name": "#freenode", "topic": "A topic"},
+	{"name": "#emo", "topic": "A sad place."},
+    ];
 }
 
 

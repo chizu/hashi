@@ -1,4 +1,4 @@
-angular.module('Hashi', ['HashiServices', 'ngCookies']).
+angular.module('Hashi', ['HashiServices', 'HashiFilters', 'ngCookies']).
     config(['$routeProvider', function($routeProvider) {
 	$routeProvider.
 	    when('/network', {templateUrl: 'partials/network-config.html',

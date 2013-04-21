@@ -15,7 +15,7 @@
           <a href="#/network" class="brand" ng-class="{active: routeIs('/network')}">Hashi</a>
           <div class="nav-collapse">
             <ul class="nav">
-	      <li ng-repeat="network in networks"><a href="#/network/{{network.hostname}}">{{network.hostname}}</a></li>
+	      <li ng-repeat="network in networks"><a ng-href="#/network/{{network.hostname}}">{{network.hostname}}</a></li>
             </ul>
 	    <ul class="nav pull-right">
 	      <li ng-show="email == null">
