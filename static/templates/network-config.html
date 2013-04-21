@@ -1,0 +1,53 @@
+<div class="page-header">
+  <h1>Server Configuration <small>enter at least one IRC server</small>
+    <a class="btn btn-primary pull-right" data-toggle="modal" href="#new-server">Add Server</a>
+  </h1>
+</div>
+<form>
+  <table id="server-list" class="table table-striped">
+    <thead>
+      <th>Enabled</th>
+      <th>Hostname</th>
+      <th>Port</th>
+      <th>SSL</th>
+      <th>Nick</th>
+    </thead>
+    <tbody></tbody>
+  </table>
+</form>
+<form id="new-server" class="modal hide fade">
+  <div class="modal-header">
+    <a href="#" class="close" data-dismiss="modal">&times;</a>
+    <h3>New Server</h3>
+  </div>
+  <div class="modal-body">
+    <div class="clearfix">
+      <label for="nick">Nick</label>
+      <div class="input">
+	<input id="nick" name="nick" size="30" type="text" value="hashi" />
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="hostname">Hostname</label>
+      <div class="input">
+	<input id="hostname" name="hostname" size="30" type="text" value="irc.freenode.org" />
+	<span class="help-inline"></span>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="port">Port</label>
+      <div class="input">
+	<div class="input-prepend">
+	  <label class="add-on">
+	    <span id="ssl-label">SSL</span>
+	    <input type="checkbox" name="ssl" id="ssl" value="" checked="true" />
+	  </label>
+	  <input class="small" id="port" name="port" size="16" type="number" value="6697" />
+	</div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <input type="submit" class="btn btn-primary" value="Connect" />&nbsp;<button type="reset" class="btn">Clear</button>
+  </div>
+</form>

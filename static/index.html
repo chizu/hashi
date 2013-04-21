@@ -1,115 +1,41 @@
 <!DOCTYPE HTML>
-<html>
+<html ng-app="Hashi">
   <head>
     <title>Hashi IRC</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-    <script type="text/javascript" src="https://login.persona.org/include.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.0.0-rc.3/handlebars.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ember.js/1.0.0-rc.2/ember.js"></script>
-    <script type="text/javascript" src="ember-data.js"></script>
-    <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="hashi.js"></script>
     <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css" />
     <link rel="stylesheet" type="text/css" href="hashi.css" media="screen, handheld" />
     <link rel="stylesheet" type="text/css" href="large.css" media="screen  and (min-width: 40.5em)" />
     <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono" rel="stylesheet" type="text/css" />
   </head>
-
-  <script type="text/x-handlebars" data-template-name="application">
-    {{partial navigation}}
-    <div class="container-fluid">
-      {{#if session.email}}
-      {{outlet}}
-      {{else}}
-      <h1>Hashi<small> A modern web IRC client.</small></h1>
-      <p>Log in to begin.</p>
-      {{/if}}
-    </div>
-  </script>
-
-  <script type="text/x-handlebars" data-template-name="_navigation">
-    <div class="navbar navbar-inverse navbar-fixed-top">
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top" ng-controller="NavigationController">
       <div class="navbar-inner">
         <div class="container-fluid">
-          {{#linkTo networks class="brand"}}Servers{{/linkTo}}
+          <a href="#/network" class="brand" ng-class="{active: routeIs('/network')}">Hashi</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
-	      {{#each network in networks}}
-	        {{#linkTo networks.network network tagName="li" class="brand"}}
-	          <a {{bindAttr href="view.href"}}>{{network.hostname}}</a>
-	        {{/linkTo}}
-	      {{/each}}
+	      <li ng-repeat="network in networks"><a href="#/network/{{network.hostname}}">{{network.hostname}}</a></li>
             </ul>
-	    {{#if session.email}}
-	    <ul class="nav pull-right">
-	      <li><a {{action logout}}>{{session.email}}</a></li>
-	    </ul>
-	    {{else}}
 	    <div class="nav pull-right">
-	      <img {{action login}} id="browserid" src="https://browserid.org/i/sign_in_blue.png" />
+	      <img id="browserid" src="https://browserid.org/i/sign_in_blue.png" ng-click="login()" ng-show="email == null" />
+	      <span ng-show="email != null">{{email}}</span>
 	    </div>
-	    {{/if}}
 	  </div>
         </div>
       </div>
     </div>
-  </script>
 
-  <script type="text/x-handlebars" data-template-name="networks">
-    {{outlet}}
-  </script>
+    <div class="container-fluid" ng-view />
 
-  <script type="text/x-handlebars" data-template-name="networks/index">
-    <h1>Server Configuration <small>enter at least one IRC server</small>
-      <a class="btn btn-primary pull-right" data-toggle="modal" href="#new-server">Add Server</a>
-    </h1>
-    <form>
-      <table id="server-list" class="table table-striped">
-        <thead>
-          <th>Enabled</th>
-          <th>Hostname</th>
-          <th>Port</th>
-          <th>SSL</th>
-          <th>Nick</th>
-        </thead>
-        <tbody>
-	  {{#each model}}
-	  <tr>
-	    <td><input type="checkbox" class="server-disable" checked /></td>
-	    <td>{{hostname}}</td>
-	    <td>{{port}}</td>
-	    {{#if ssl}}	       
-	    <td><a class="btn btn-small btn-success disabled"><i class="icon-lock icon-white" /> Enabled</a></td>
-	    {{else}}
-	    <td><a class="btn btn-small btn-danger disabled"><i class="icon-lock icon-white" /> Disabled</a></td>
-	    {{/if}}
-	    <td>{{nick}}</td>
-	  </tr>
-	  {{/each}}
-	</tbody>
-      </table>
-    </form>
-  </script>
-  
-  <script type="text/x-handlebars" data-template-name="networks/network">
-    <div class="row-fluid">
-      <div class="span3">
-	<div class="well sidebar-nav">
-	  <ul class="nav nav-list">
-	    <!-- Dummy data -->
-	    <li class="nav-header">Channels</li>
-	    <li class="active"><a href="#">#freenode</a></li>
-	    <li><a href="#">#notfreenode</a></li>
-	  </ul>
-	</div>
-      </div>
-      <div class="span9">
-	{{outlet}}
-      </div>
-    </div class="row-fluid">
-  </script>
-
-  <body></body>
-
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular-resource.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular-cookies.min.js"></script>
+    <script type="text/javascript" src="//login.persona.org/include.js"></script>
+    <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="hashi.js"></script>
+    <script type="text/javascript" src="controllers.js"></script>
+    <script type="text/javascript" src="services.js"></script>
+  </body>
 </html>
