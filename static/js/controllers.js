@@ -21,9 +21,11 @@ function NavigationController($scope, $location, $cookies) {
 	{"hostname":"irc.freenode.org"},
 	{"hostname":"irc.reddit.com"}
     ];
+
     $scope.routeIs = function(routeName) {
 	return $location.path() === routeName;
     };
+
     if ($cookies.TWISTED_SESSION) {
 	// Server gave us a session key - use the old login
 	$scope.email = $cookies.email;
@@ -33,6 +35,7 @@ function NavigationController($scope, $location, $cookies) {
 	delete $cookies.email;
 	$scope.email = null;
     }
+
     $scope.login = function () {
 	navigator.id.watch({
 	    loggedInUser: $scope.email,
@@ -47,10 +50,11 @@ function NavigationController($scope, $location, $cookies) {
 			    console.log("bad browserid assertion");
 			}
 			else {
-			    console.log("login success", res.email);
-			    $cookies.email = res.email;
-			    $scope.email = res.email;
-			    $scope.$apply();
+			    $scope.$apply(function () {
+				console.log("login success", res.email);
+				$cookies.email = res.email;
+				$scope.email = res.email;
+			    });
 			}
 		    },
 		    error: function(res, status, xhr) {
