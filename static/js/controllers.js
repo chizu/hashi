@@ -17,14 +17,10 @@ function ChannelController($scope, $routeParams) {
 }
 
 function LandingController($scope) {
-    
 }
 
-function NavigationController($scope, $location, $cookies) {
-    $scope.networks = [
-	{"hostname":"irc.freenode.org"},
-	{"hostname":"irc.reddit.com"}
-    ];
+function NavigationController($scope, $location, $cookies, Network) {
+    $scope.networks = Network.query();
 
     $scope.routeIs = function(routeName) {
 	return $location.path() === routeName;
