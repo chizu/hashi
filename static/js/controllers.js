@@ -2,12 +2,9 @@ function NetworkConfigController($scope) {
     
 }
 
-function NetworkController($scope, $routeParams) {
+function NetworkController($scope, $routeParams, Channels) {
     $scope.hostname = $routeParams.hostname;
-    $scope.channels = [
-	{"name": "#freenode", "topic": "A topic"},
-	{"name": "#emo", "topic": "A sad place."},
-    ];
+    $scope.channels = Channels.query({"hostname": $scope.hostname});
 }
 
 
@@ -20,7 +17,7 @@ function LandingController($scope) {
 }
 
 
-function NavigationController($scope, $location, $cookies, Network, authService) {
+function NavigationController($scope, $location, $cookies, Networks, authService) {
     function invalid_session() {
 	// No session key - need to log in
 	delete $cookies.email;
@@ -43,7 +40,7 @@ function NavigationController($scope, $location, $cookies, Network, authService)
 	}
     }
 
-    $scope.networks = Network.query({}, network_success, network_failure);
+    $scope.networks = Networks.query({}, network_success, network_failure);
 
     $scope.routeIs = function(routeName) {
 	return $location.path() === routeName;
