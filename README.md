@@ -4,6 +4,7 @@
 
 This software is licensed under the GNU Affero General Public License v3 as provided in LICENSE.txt or at http://www.gnu.org/licenses/agpl.txt
 
+Thanks to Witold Szczerba for [http-auth-interceptor](https://github.com/witoldsz/angular-http-auth) available under the MIT license.
 
 ## Setup
 

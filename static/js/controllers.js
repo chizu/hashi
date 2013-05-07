@@ -20,7 +20,7 @@ function LandingController($scope) {
 }
 
 
-function NavigationController($scope, $location, $cookies, Network) {
+function NavigationController($scope, $location, $cookies, Network, authService) {
     function invalid_session() {
 	// No session key - need to log in
 	delete $cookies.email;
@@ -64,6 +64,7 @@ function NavigationController($scope, $location, $cookies, Network) {
 			}
 			else {
 			    $scope.$apply(function () {
+				authService.loginConfirmed();
 				console.log("login success", res.email);
 				$cookies.email = res.email;
 				$scope.email = res.email;
