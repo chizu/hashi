@@ -331,11 +331,12 @@ class IRCChannel(Resource):
         """List of channels by default"""
         def render_channels(l):
             payload = jtype("channel", 
-                            [{'server_id': row[0], 'name':row[1]}
+                            [{'server_id': row[0], 'name': row[1], 
+                              'topic': row[2]}
                              for row in l])
             request.write(payload)
             request.finish()
-        chan_sql = """SELECT server_id, name FROM channels"""
+        chan_sql = """SELECT server_id, name, topic FROM channels"""
         server_hostname = get_any(request, "hostname")
         server_id = get_any(request, "server_id")
         if server_hostname and not server_id:
