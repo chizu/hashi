@@ -5,8 +5,8 @@ angular.module('Hashi', ['HashiServices', 'HashiFilters', 'http-auth-interceptor
 			      controller: NetworkConfigController}).
 	    when('/network/:hostname', {templateUrl: 'partials/network.html',
 					controller: NetworkController}).
-	    when('/network/:hostname/:channel', {templateUrl: 'partials/channel.html',
-						 controller: ChannelController}).
+	    when('/network/:hostname/:channel', {templateUrl: 'partials/network.html',
+						 controller: NetworkController}).
 	    when('/landing', {templateUrl: 'partials/landing.html',
 			      controller: LandingController}).
 	    otherwise({redirectTo: '/landing'});
