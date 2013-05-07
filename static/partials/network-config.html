@@ -12,7 +12,15 @@
       <th>SSL</th>
       <th>Nick</th>
     </thead>
-    <tbody></tbody>
+    <tbody>
+      <tr ng-repeat="network in networks">
+	<td>Yes</td>
+	<td>{{network.hostname}}</td>
+	<td>{{network.port}}</td>
+	<td>{{network.ssl}}</td>
+	<td>{{network.nick}}</td>
+      </tr>
+    </tbody>
   </table>
 </form>
 <form id="new-server" class="modal hide fade">

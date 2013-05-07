@@ -1,5 +1,5 @@
-function NetworkConfigController($scope) {
-    
+function NetworkConfigController($scope, Networks) {
+    $scope.networks = Networks.query();
 }
 
 function NetworkController($scope, $routeParams, Channels) {
