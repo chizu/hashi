@@ -19,22 +19,35 @@ function ChannelController($scope, $routeParams) {
 function LandingController($scope) {
 }
 
+
 function NavigationController($scope, $location, $cookies, Network) {
-    $scope.networks = Network.query();
-
-    $scope.routeIs = function(routeName) {
-	return $location.path() === routeName;
-    };
-
-    if ($cookies.TWISTED_SESSION) {
-	// Server gave us a session key - use the old login
-	$scope.email = $cookies.email;
-    }
-    else {
+    function invalid_session() {
 	// No session key - need to log in
 	delete $cookies.email;
 	$scope.email = null;
     }
+
+    function network_success() {
+	if ($cookies.TWISTED_SESSION) {
+	    // Server gave us a session key - use the old login
+	    $scope.email = $cookies.email;
+	}
+	else {
+	    invalid_session();
+	}
+    }
+
+    function network_failure(response) {
+	if (response.status === 401) {
+	    invalid_session();
+	}
+    }
+
+    $scope.networks = Network.query({}, network_success, network_failure);
+
+    $scope.routeIs = function(routeName) {
+	return $location.path() === routeName;
+    };
 
     $scope.login = function () {
 	navigator.id.watch({
