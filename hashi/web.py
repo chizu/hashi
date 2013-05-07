@@ -22,7 +22,7 @@ irc_client = ZmqPushConnection(zmqfactory, "hashi-web", irc_end)
 
 def jtype(json_type="error", objects={}):
     """Mini-wrapper for the conventional json type structure."""
-    return json.dumps({json_type: objects})
+    return json.dumps(objects)
 
 
 def get_any(request, key):
@@ -48,7 +48,7 @@ def require_login(func):
             return func(self, request, session)
         else:
             request.setResponseCode(401)
-            return json.dumps({"error": {"message": "must be logged in"}})
+            return jtype("error", {"message": "must be logged in"})
     return wrapped
 
 
@@ -219,7 +219,7 @@ class IRCNetwork(Resource):
         servers = [dict(zip(("email", "hostname", "port", "ssl", "nick"), x))
                    for x in server_list]
         if server_list:
-            request.write(json.dumps({"networks":servers}))
+            request.write(jtype("networks", servers))
         else:
             request.write(json.dumps(None))
         request.finish()
